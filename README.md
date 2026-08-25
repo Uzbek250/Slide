@@ -1,40 +1,55 @@
-# Slide Generator Bot
+# Slide Generator
 
-Telegram bot: mavzu + slayd soni → tayyor `.pptx` fayl.
-Gemini API kontent (matn/struktura) yaratadi, Playwright + HTML/CSS chiroyli
-slayd dizaynini renderlaydi, python-pptx ularni bitta faylga yig'adi.
+Veb-ilova: mavzu + slaydlar soni → tayyor `.pptx` fayl.
+Gemini API kontent (matn/struktura) yaratadi, Wikimedia Commons'dan mavzuga
+mos rasmlar qidiriladi, Playwright + HTML/CSS chiroyli slayd dizaynini
+renderlaydi, python-pptx ularni bitta faylga yig'adi.
 
 ## Arxitektura
 
 ```
-Telegram bot (yengil, doim ishlaydi)
-        │  HTTP
+Brauzer (index.html — mavzu kiritish formasi)
+        │  POST /generate
         ▼
 FastAPI backend (Docker, Chromium bilan)
         │
-        ├─ Gemini API → slayd JSON struktura
+        ├─ Gemini API → slayd JSON struktura (matn + rasm so'rovlari)
+        ├─ Wikimedia Commons API → mavzuga mos rasm qidirish
         ├─ Jinja2 + HTML shablon → har slayd uchun HTML
         ├─ Playwright → har HTML'ni PNG screenshot
         └─ python-pptx → PNG'larni .pptx ga yig'ish
 ```
 
-Bot va backend ataylab ikkita alohida servis: bot yengil (Chromium yo'q,
-doim tekin tarifda ishlashi mumkin), backend og'ir (Chromium uchun
-ko'proq RAM kerak).
+Bitta servis — alohida bot yoki worker kerak emas.
 
-## Loyihaning holati (nima tayyor, nima yo'q)
+## Slayd shablonlari
 
-**Tayyor va sinovdan o'tgan:**
-- HTML shablonlar (6 ta layout turi: title, bullets, two_column, big_stat, quote, closing)
-- 4 ta tayyor tema (minimal, corporate, gradient_dark, warm)
-- Render pipeline (HTML → PNG → PPTX) — real skrinshotlar bilan sinaldi, natija yuqorida ko'rsatilgan
-- FastAPI backend skeleti
+`app/templates/` papkasida 9 ta layout turi:
+- `title` — sarlavha, ixtiyoriy fon rasm, tag'lar
+- `bullets` — raqamlangan ro'yxat (title + detail)
+- `two_column` — ikki ustunli taqqoslash
+- `timeline` — ketma-ket bosqichlar
+- `icon_grid` — 4 ta ikonli karta
+- `stats_grid` — raqamli statistika
+- `big_stat` — bitta katta raqam
+- `quote` — iqtibos
+- `image_text` — rasm + matn yonma-yon
+- `closing` — yakuniy slayd
 
-**Sinalmagan (API kalitingiz kerak):**
-- `content_generator.py` — Gemini chaqiruvi kodi yozilgan, lekin haqiqiy
-  `GEMINI_API_KEY` bilan hali ishga tushirilmagan. Birinchi ishga tushirishda
-  Gemini qaytargan JSON formatini tekshirib, kerak bo'lsa prompt'ni moslashtiring.
-- Telegram bot — kod tayyor, lekin `TELEGRAM_BOT_TOKEN` bilan hali sinalmagan
+4 ta tema: `minimal`, `corporate`, `gradient_dark`, `warm` — `_base.html`da
+CSS o'zgaruvchilar orqali boshqariladi.
+
+## Rasm qidirish (Wikimedia Commons)
+
+`app/core/image_search.py` — API key kerak emas, anonim so'rov orqali
+ishlaydi. Gemini har bir `image_text` yoki `title` slaydi uchun ingliz
+tilida aniq qidiruv so'zi (`image_query`) generatsiya qiladi, so'ng shu
+so'z bo'yicha Commons'dan eng mos rasm tanlanadi (o'lcham, format,
+aspekt nisbati bo'yicha filtrlanadi).
+
+**Xavfsizlik tarmog'i:** agar rasm topilmasa yoki tarmoq xatosi bo'lsa,
+`image_text` slaydi avtomatik ravishda `bullets` turiga aylanadi — hech
+qachon bo'sh yoki buzilgan slayd chiqmaydi.
 
 ## Lokal ishga tushirish
 
@@ -43,19 +58,16 @@ ko'proq RAM kerak).
 pip install -r requirements.txt
 playwright install chromium
 
-# 2. Muhit o'zgaruvchilari
+# 2. Muhit o'zgaruvchisi
 export GEMINI_API_KEY="sizning_kalitingiz"
-export TELEGRAM_BOT_TOKEN="bot_father_dan_olingan_token"
-export BACKEND_URL="http://localhost:8000"
 
-# 3. Backend'ni ishga tushirish
+# 3. Ishga tushirish
 uvicorn app.main:app --reload --port 8000
-
-# 4. Alohida terminalda — botni ishga tushirish
-python bot.py
 ```
 
-Backend'ni Gemini'siz sinash uchun (faqat render pipeline):
+Brauzerda `http://localhost:8000` oching.
+
+Gemini'siz, faqat render pipeline'ni sinash uchun:
 ```bash
 python test_pipeline.py
 ```
@@ -65,26 +77,21 @@ natija `test_output/` papkasida chiqadi.
 ## Render.com'ga deploy qilish
 
 1. Kodni GitHub repo'ga yuklang
-2. Render dashboardida **New → Blueprint** tanlang, repo'ni ulang
-   (`render.yaml` avtomatik ikkala servisni — backend va bot — yaratadi)
-3. Backend servisida `GEMINI_API_KEY` environment variable qo'shing
-4. Bot servisida `TELEGRAM_BOT_TOKEN` environment variable qo'shing
-5. Deploy tugagach, Telegram'da botga `/start` yozib sinang
+2. Render dashboardida **New → Web Service** tanlang, repo'ni ulang
+   (yoki `render.yaml` orqali **New → Blueprint**)
+3. **Runtime**: Docker, **Dockerfile Path**: `./Dockerfile`
+4. Environment Variables qismiga `GEMINI_API_KEY` qo'shing
+5. Deploy qiling
 
-**MUHIM — xotira haqida:** Backend uchun `render.yaml`da `plan: starter`
-qo'yilgan (free emas). Sababi: Chromium'ga kamida ~1GB RAM kerak, Render'ning
-free tarifi (512MB) bilan tez-tez "out of memory" xatosi berishi mumkin.
-Agar avval free tarifda sinab ko'rmoqchi bo'lsangiz, mumkin — lekin
-tayyor bo'ling, ba'zan so'rov muvaffaqiyatsiz tugashi mumkin, ayniqsa
-concurrent (bir vaqtdagi) so'rovlarda.
+**MUHIM — xotira haqida:** Chromium'ga kamida ~1GB RAM tavsiya etiladi.
+Render'ning free tarifi (512MB) bilan ba'zan "out of memory" xatosi
+chiqishi mumkin, ayniqsa bir nechta so'rov bir vaqtda kelsa. Barqaror
+ishlashi uchun `Starter` yoki undan yuqori tarifga o'tish tavsiya etiladi.
 
 ## Keyingi qadamlar (hali qilinmagan)
 
-- [ ] Gemini bilan haqiqiy sinov, JSON formatini moslashtirish
-- [ ] Telegram bot haqiqiy tokendan sinash
-- [ ] Xatolik holatlari: Gemini javob bermasa / noto'g'ri JSON qaytarsa nima bo'ladi
 - [ ] Rate limiting — bir foydalanuvchi ketma-ket ko'p so'rov yubormasin
-- [ ] Free tier limitiga yetganda foydalanuvchiga aniq xabar (hozir generic xato chiqadi)
-- [ ] Fayl hajmini kichraytirish (hozir 6 slayd ~9MB — device_scale_factor=1
-      ga tushirish yoki PNG siqishni sinash mumkin)
-- [ ] Ko'p bir vaqtdagi so'rovlar kelsa navbat (queue) tizimi kerak bo'lishi mumkin
+- [ ] Fayl hajmini kichraytirish (device_scale_factor yoki PNG siqish)
+- [ ] Ko'p bir vaqtdagi so'rovlar uchun navbat (queue) tizimi
+- [ ] Pexels/Unsplash integratsiyasi — Wikimedia'da topilmagan
+      (masalan biznes/lifestyle) mavzular uchun qo'shimcha manba

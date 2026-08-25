@@ -7,5 +7,4 @@ google-genai==1.28.0
 pillow==10.4.0
 python-multipart==0.0.12
 pydantic==2.9.2
-python-telegram-bot==22.8
 httpx==0.28.1

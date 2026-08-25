@@ -182,7 +182,7 @@ def generate_deck_structure(topic: str, slide_count: int) -> dict:
             temperature=0.7,
             response_mime_type="application/json",
             max_output_tokens=16384,
-            thinking_config=types.ThinkingConfig(thinking_level="low"),
+            thinking_config=types.ThinkingConfig(thinking_budget=0),
         ),
     )
 

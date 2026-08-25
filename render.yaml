@@ -1,9 +1,9 @@
 # Render.com uchun "Infrastructure as Code" fayli.
 # Bu fayl repo ildizida bo'lsa, Render dashboardida "New Blueprint"
-# orqali ikkala servisni bir vaqtda, avtomatik sozlab yaratish mumkin.
+# orqali servisni avtomatik sozlab yaratish mumkin.
 #
-# MUHIM: backend uchun kamida "Starter" tarif (1GB+ RAM) tavsiya etiladi.
-# Free tarif (512MB) Chromium bilan beqaror ishlashi mumkin.
+# MUHIM: Chromium bilan render qilish uchun kamida "Starter" tarif (1GB+ RAM)
+# tavsiya etiladi. Free tarif (512MB) beqaror ishlashi mumkin.
 
 services:
   - type: web
@@ -15,17 +15,3 @@ services:
       - key: GEMINI_API_KEY
         sync: false  # Render dashboardida qo'lda kiritiladi (sirni git'ga qo'ymaslik uchun)
     healthCheckPath: /health
-
-  - type: worker
-    name: slide-bot-telegram
-    runtime: docker
-    dockerfilePath: ./Dockerfile.bot
-    plan: free  # bot yengil, free tarifda ham barqaror ishlaydi
-    envVars:
-      - key: TELEGRAM_BOT_TOKEN
-        sync: false
-      - key: BACKEND_URL
-        fromService:
-          type: web
-          name: slide-bot-backend
-          property: hostport
