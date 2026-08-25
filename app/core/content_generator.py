@@ -141,6 +141,27 @@ def get_client() -> genai.Client:
     return genai.Client(api_key=api_key)
 
 
+def _parse_json_lenient(raw_text: str) -> dict:
+    """
+    Gemini javobini JSON sifatida o'qiydi. Ba'zan model to'g'ri JSON'dan keyin
+    qo'shimcha matn (masalan yana bir bo'sh JSON yoki izoh) qo'shib yuborishi
+    mumkin — bu "Extra data" xatosiga olib keladi. json.JSONDecoder.raw_decode
+    faqat birinchi to'liq obyektni o'qib, qoldiqni e'tiborsiz qoldiradi.
+
+    Agar JSON o'rtada kesilgan bo'lsa (token limiti tufayli), aniq xato beradi.
+    """
+    decoder = json.JSONDecoder()
+    try:
+        obj, _end_index = decoder.raw_decode(raw_text)
+        return obj
+    except json.JSONDecodeError as e:
+        raise RuntimeError(
+            "Gemini javobini JSON sifatida o'qib bo'lmadi — javob kesilgan yoki "
+            f"noto'g'ri formatda bo'lishi mumkin (slaydlar sonini kamaytirib ko'ring). "
+            f"Texnik tafsilot: {e}"
+        ) from e
+
+
 def generate_deck_structure(topic: str, slide_count: int) -> dict:
     """
     Mavzu va slayd soni asosida to'liq JSON strukturani qaytaradi.
@@ -160,10 +181,23 @@ def generate_deck_structure(topic: str, slide_count: int) -> dict:
             system_instruction=SYSTEM_PROMPT,
             temperature=0.7,
             response_mime_type="application/json",
+            max_output_tokens=16384,
+            thinking_config=types.ThinkingConfig(thinking_level="low"),
         ),
     )
 
-    raw_text = response.text.strip()
+    raw_text = (response.text or "").strip()
+    if not raw_text:
+        finish_reason = None
+        try:
+            finish_reason = response.candidates[0].finish_reason
+        except (AttributeError, IndexError, TypeError):
+            pass
+        raise RuntimeError(
+            "Gemini bo'sh javob qaytardi (ehtimol token limiti yoki xavfsizlik filtri "
+            f"tufayli javob kesilgan bo'lishi mumkin). finish_reason={finish_reason}"
+        )
+
     # Ehtiyot chorasi: ba'zan model baribir ```json fence bilan qaytarishi mumkin
     if raw_text.startswith("```"):
         raw_text = raw_text.split("```")[1]
@@ -171,7 +205,7 @@ def generate_deck_structure(topic: str, slide_count: int) -> dict:
             raw_text = raw_text[4:]
         raw_text = raw_text.strip()
 
-    data = json.loads(raw_text)
+    data = _parse_json_lenient(raw_text)
 
     # Slayd sonini talab qilingan songa moslashtirish (model ba'zan ±1 xato qilishi mumkin)
     slides = data.get("slides", [])
