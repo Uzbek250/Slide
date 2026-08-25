@@ -5,13 +5,17 @@ boshqa mijoz (masalan Flutter ilova) qo'shilsa, backend o'zgarmaydi.
 """
 import os
 import uuid
-from fastapi import FastAPI, HTTPException
-from fastapi.responses import FileResponse
+from fastapi import FastAPI, HTTPException, Request
+from fastapi.responses import FileResponse, HTMLResponse
+from fastapi.templating import Jinja2Templates
 from pydantic import BaseModel, Field
 
 from app.core.pipeline import generate_presentation
 
 app = FastAPI(title="Slide Generator API")
+
+TEMPLATES_DIR = os.path.join(os.path.dirname(__file__), "templates")
+templates = Jinja2Templates(directory=TEMPLATES_DIR)
 
 OUTPUT_DIR = "/tmp/slide_outputs"
 os.makedirs(OUTPUT_DIR, exist_ok=True)
@@ -20,6 +24,11 @@ os.makedirs(OUTPUT_DIR, exist_ok=True)
 class GenerateRequest(BaseModel):
     topic: str = Field(..., min_length=2, max_length=300)
     slide_count: int = Field(..., ge=3, le=20)  # 20+ = Gemini free tier/vaqt uchun xavfli
+
+
+@app.get("/", response_class=HTMLResponse)
+def index(request: Request):
+    return templates.TemplateResponse("index.html", {"request": request})
 
 
 @app.get("/health")

@@ -1,0 +1,274 @@
+<!DOCTYPE html>
+<html lang="uz">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Slide — AI taqdimot generatori</title>
+<style>
+  :root {
+    --bg: #0B0D10;
+    --panel: #14171C;
+    --border: #22262D;
+    --text: #EDEFF2;
+    --muted: #8A909B;
+    --accent: #FFB238;
+    --accent-dim: #7A5A1E;
+    --error: #E5484D;
+  }
+  * { box-sizing: border-box; }
+  body {
+    margin: 0;
+    background: var(--bg);
+    color: var(--text);
+    font-family: 'Söhne', 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    padding: 48px 20px;
+  }
+  .brand {
+    display: flex;
+    align-items: baseline;
+    gap: 10px;
+    margin-bottom: 6px;
+  }
+  .brand .mark {
+    width: 10px; height: 10px;
+    background: var(--accent);
+    display: inline-block;
+    transform: rotate(45deg);
+  }
+  .brand h1 {
+    font-size: 15px;
+    letter-spacing: 0.14em;
+    text-transform: uppercase;
+    font-weight: 600;
+    margin: 0;
+    color: var(--muted);
+  }
+  .hero {
+    font-size: clamp(28px, 5vw, 44px);
+    font-weight: 650;
+    line-height: 1.15;
+    letter-spacing: -0.02em;
+    max-width: 560px;
+    text-align: center;
+    margin: 18px 0 40px;
+  }
+  .hero em {
+    font-style: normal;
+    color: var(--accent);
+  }
+  .panel {
+    width: 100%;
+    max-width: 520px;
+    background: var(--panel);
+    border: 1px solid var(--border);
+    border-radius: 14px;
+    padding: 28px;
+  }
+  label {
+    display: block;
+    font-size: 12px;
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+    color: var(--muted);
+    margin-bottom: 8px;
+    font-weight: 600;
+  }
+  textarea, select {
+    width: 100%;
+    background: #0E1013;
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    color: var(--text);
+    font-size: 15px;
+    font-family: inherit;
+    padding: 12px 14px;
+    resize: vertical;
+    transition: border-color 0.15s ease;
+  }
+  textarea:focus, select:focus {
+    outline: none;
+    border-color: var(--accent);
+  }
+  textarea { min-height: 84px; }
+  .field { margin-bottom: 20px; }
+  .row {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 16px;
+  }
+  select { max-width: 140px; cursor: pointer; }
+  button {
+    width: 100%;
+    background: var(--accent);
+    color: #14100A;
+    border: none;
+    border-radius: 8px;
+    padding: 14px;
+    font-size: 15px;
+    font-weight: 700;
+    font-family: inherit;
+    cursor: pointer;
+    margin-top: 8px;
+    transition: opacity 0.15s ease, transform 0.1s ease;
+  }
+  button:hover:not(:disabled) { opacity: 0.92; }
+  button:active:not(:disabled) { transform: scale(0.99); }
+  button:disabled {
+    background: #2B2E33;
+    color: var(--muted);
+    cursor: not-allowed;
+  }
+  .status {
+    margin-top: 18px;
+    font-size: 13px;
+    color: var(--muted);
+    display: none;
+    align-items: center;
+    gap: 10px;
+  }
+  .status.visible { display: flex; }
+  .spinner {
+    width: 14px; height: 14px;
+    border: 2px solid var(--border);
+    border-top-color: var(--accent);
+    border-radius: 50%;
+    animation: spin 0.8s linear infinite;
+    flex-shrink: 0;
+  }
+  @keyframes spin { to { transform: rotate(360deg); } }
+  .result {
+    margin-top: 18px;
+    display: none;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+    padding: 14px 16px;
+    background: #10160F;
+    border: 1px solid #2A4A22;
+    border-radius: 8px;
+  }
+  .result.visible { display: flex; }
+  .result span { font-size: 14px; color: #9FE39A; }
+  .result a {
+    color: #14100A;
+    background: #9FE39A;
+    text-decoration: none;
+    font-weight: 700;
+    font-size: 13px;
+    padding: 8px 14px;
+    border-radius: 6px;
+    white-space: nowrap;
+  }
+  .error {
+    margin-top: 18px;
+    display: none;
+    padding: 14px 16px;
+    background: #1F1214;
+    border: 1px solid #4A2226;
+    border-radius: 8px;
+    color: var(--error);
+    font-size: 13px;
+  }
+  .error.visible { display: block; }
+  footer {
+    margin-top: 28px;
+    font-size: 12px;
+    color: #4B5058;
+  }
+</style>
+</head>
+<body>
+
+  <div class="brand">
+    <span class="mark"></span>
+    <h1>Slide</h1>
+  </div>
+  <div class="hero">Mavzuni yozing, <em>taqdimot</em> tayyor bo'ladi</div>
+
+  <div class="panel">
+    <form id="genForm">
+      <div class="field">
+        <label for="topic">Mavzu</label>
+        <textarea id="topic" name="topic" placeholder="Masalan: O'zbekistonda qayta tiklanuvchi energiya" minlength="2" maxlength="300" required></textarea>
+      </div>
+      <div class="field row">
+        <label for="slideCount" style="margin-bottom:0;">Slaydlar soni</label>
+        <select id="slideCount" name="slide_count">
+          <option value="5">5</option>
+          <option value="8" selected>8</option>
+          <option value="10">10</option>
+          <option value="15">15</option>
+          <option value="20">20</option>
+        </select>
+      </div>
+      <button type="submit" id="submitBtn">Yaratish</button>
+    </form>
+
+    <div class="status" id="status">
+      <div class="spinner"></div>
+      <span id="statusText">Taqdimot tayyorlanmoqda...</span>
+    </div>
+
+    <div class="result" id="result">
+      <span>Taqdimot tayyor</span>
+      <a id="downloadLink" href="#">Yuklab olish</a>
+    </div>
+
+    <div class="error" id="errorBox"></div>
+  </div>
+
+  <footer>FastAPI + Gemini orqali ishlaydi</footer>
+
+<script>
+const form = document.getElementById('genForm');
+const submitBtn = document.getElementById('submitBtn');
+const statusEl = document.getElementById('status');
+const statusText = document.getElementById('statusText');
+const resultEl = document.getElementById('result');
+const errorBox = document.getElementById('errorBox');
+const downloadLink = document.getElementById('downloadLink');
+
+form.addEventListener('submit', async (e) => {
+  e.preventDefault();
+
+  resultEl.classList.remove('visible');
+  errorBox.classList.remove('visible');
+  statusEl.classList.add('visible');
+  statusText.textContent = 'Taqdimot tayyorlanmoqda... (bir necha daqiqa vaqt olishi mumkin)';
+  submitBtn.disabled = true;
+
+  const topic = document.getElementById('topic').value;
+  const slideCount = parseInt(document.getElementById('slideCount').value, 10);
+
+  try {
+    const resp = await fetch('/generate', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ topic: topic, slide_count: slideCount })
+    });
+
+    if (!resp.ok) {
+      const data = await resp.json().catch(() => ({}));
+      throw new Error(data.detail || 'Generatsiya xatoligi yuz berdi');
+    }
+
+    const data = await resp.json();
+    downloadLink.href = '/download/' + data.file_id;
+    resultEl.classList.add('visible');
+  } catch (err) {
+    errorBox.textContent = err.message;
+    errorBox.classList.add('visible');
+  } finally {
+    statusEl.classList.remove('visible');
+    submitBtn.disabled = false;
+  }
+});
+</script>
+
+</body>
+</html>
