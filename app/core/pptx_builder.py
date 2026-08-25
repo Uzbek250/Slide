@@ -1,5 +1,5 @@
 """
-Screenshot qilingan PNG rasmlarni bitta .pptx faylga yig'adi.
+Screenshot qilingan rasmlarni (JPEG yoki PNG) bitta .pptx faylga yig'adi.
 Har bir rasm — bitta slaydga to'liq (full-bleed) joylashtiriladi.
 """
 from pptx import Presentation

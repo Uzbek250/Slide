@@ -104,8 +104,13 @@ def render_deck_to_images(deck: dict, output_dir: str) -> list[str]:
             # networkidle: tashqi rasm (Wikimedia) va shriftlar to'liq
             # yuklanguncha kutadi, aks holda screenshot yarim tayyor bosilib qolishi mumkin
             page.set_content(html, wait_until="networkidle", timeout=20000)
-            img_path = os.path.join(output_dir, f"slide_{i:03d}.png")
-            page.screenshot(path=img_path)
+            img_path = os.path.join(output_dir, f"slide_{i:03d}.jpg")
+            # JPEG (quality=90) — PNG'ga nisbatan 3-5x kichikroq fayl beradi,
+            # gradient/rang fonlarda lossless PNG hech qanday amaliy sifat
+            # farqisiz keraksiz katta chiqadi. 20 slaydlik deck bir necha
+            # o'nlab MB o'rniga bir necha MB atrofida qoladi (Telegram orqali
+            # yuborish/yuklab olish tezligi uchun muhim).
+            page.screenshot(path=img_path, type="jpeg", quality=90)
             image_paths.append(img_path)
 
         browser.close()

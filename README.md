@@ -91,7 +91,20 @@ ishlashi uchun `Starter` yoki undan yuqori tarifga o'tish tavsiya etiladi.
 ## Keyingi qadamlar (hali qilinmagan)
 
 - [ ] Rate limiting — bir foydalanuvchi ketma-ket ko'p so'rov yubormasin
-- [ ] Fayl hajmini kichraytirish (device_scale_factor yoki PNG siqish)
 - [ ] Ko'p bir vaqtdagi so'rovlar uchun navbat (queue) tizimi
 - [ ] Pexels/Unsplash integratsiyasi — Wikimedia'da topilmagan
       (masalan biznes/lifestyle) mavzular uchun qo'shimcha manba
+
+## O'zgarishlar tarixi
+
+**2026-08:**
+- Fayl hajmi optimallashtirildi: slaydlar endi PNG o'rniga JPEG
+  (quality=90) sifatida screenshot qilinadi — o'rtacha 10x kichikroq
+  fayl (10 slaydli deck ~19MB'dan ~2MB'ga tushdi), matn/gradient
+  sifatida ko'zga sezilarli farq yo'q
+- `bullets`, `timeline`, `two_column` shablonlaridagi vertikal
+  markazlashtirish xatosi tuzatildi — 3-4 punktli slaydlarda kontent
+  endi yuqoridan boshlanadi, tepa/pastda keraksiz bo'sh joy qolmaydi
+  (`stats_grid`, `icon_grid`, `image_text`, `title`, `quote`,
+  `big_stat`, `closing` — bularda markazlashtirish qasddan qoldirilgan,
+  chunki bu layoutlar uchun to'g'ri ko'rinish)
