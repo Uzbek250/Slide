@@ -3,41 +3,54 @@
   .columns {
     display: flex;
     gap: 48px;
-    margin-top: 16px;
+    margin-top: 24px;
     flex: 1;
   }
   .column {
     flex: 1;
     background: var(--card-bg);
     border-radius: 24px;
-    padding: 48px 44px;
+    padding: 52px 48px;
+    display: flex;
+    flex-direction: column;
   }
   .column-title {
-    font-size: 34px;
-    font-weight: 700;
+    font-size: 38px;
+    font-weight: 800;
     color: var(--accent);
-    margin-bottom: 28px;
+    margin-bottom: 36px;
   }
   .column ul {
     list-style: none;
     display: flex;
     flex-direction: column;
-    gap: 22px;
+    gap: 32px;
+    flex: 1;
+    justify-content: center;
   }
   .column li {
-    font-size: 28px;
-    line-height: 1.4;
-    padding-left: 28px;
+    padding-left: 32px;
     position: relative;
-    color: var(--text-primary);
   }
   .column li::before {
     content: "";
     position: absolute;
-    left: 0; top: 12px;
-    width: 10px; height: 10px;
+    left: 0; top: 14px;
+    width: 12px; height: 12px;
     border-radius: 50%;
     background: var(--accent-2);
+  }
+  .li-title {
+    font-size: 30px;
+    line-height: 1.35;
+    color: var(--text-primary);
+    font-weight: 700;
+  }
+  .li-detail {
+    font-size: 23px;
+    line-height: 1.4;
+    color: var(--text-secondary);
+    margin-top: 6px;
   }
 {% endblock %}
 {% block content %}
@@ -47,11 +60,25 @@
   <div class="columns">
     <div class="column">
       <div class="column-title">{{ left_title }}</div>
-      <ul>{% for p in left_points %}<li>{{ p }}</li>{% endfor %}</ul>
+      <ul>
+      {% for p in left_points %}
+        <li>
+          <div class="li-title">{{ p.title if p is mapping else p }}</div>
+          {% if p is mapping and p.detail %}<div class="li-detail">{{ p.detail }}</div>{% endif %}
+        </li>
+      {% endfor %}
+      </ul>
     </div>
     <div class="column">
       <div class="column-title">{{ right_title }}</div>
-      <ul>{% for p in right_points %}<li>{{ p }}</li>{% endfor %}</ul>
+      <ul>
+      {% for p in right_points %}
+        <li>
+          <div class="li-title">{{ p.title if p is mapping else p }}</div>
+          {% if p is mapping and p.detail %}<div class="li-detail">{{ p.detail }}</div>{% endif %}
+        </li>
+      {% endfor %}
+      </ul>
     </div>
   </div>
   <div class="page-number">{{ page_num }}</div>

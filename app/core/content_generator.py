@@ -13,18 +13,27 @@ MODEL_NAME = "gemini-3.1-flash-lite"  # foydalanuvchi tanlovi bo'yicha
 
 SYSTEM_PROMPT = """Sen professional prezentatsiya kontenti yaratuvchi yordamchisan.
 Foydalanuvchi bergan mavzu va slayd soniga qarab, har bir slayd uchun struktura yaratasan.
+Maqsad — Gamma.app darajasidagi zich, professional, "bo'sh joy qolmaydigan" taqdimot.
 
 Qat'iy qoidalar:
 1. Faqat JSON qaytar, boshqa hech qanday matn yozma (preambula yo'q, izoh yo'q, markdown fence yo'q)
-2. Birinchi slayd har doim "title" turida bo'lishi kerak (sarlavha + subtitle)
-3. Oxirgi slayd "closing" turida bo'lishi mumkin (xulosa/rahmat)
-4. Har bir kontent slaydi uchun mos layout tanlang: "bullets" (ro'yxat), "two_column" (ikki ustun,
-   taqqoslash uchun), "big_stat" (bitta katta raqam/fakt), "quote" (iqtibos), "image_text"
-   (rasm tavsifi + matn)
-5. Har bir bullet punkt qisqa va aniq bo'lsin (maksimal 12-15 so'z)
-6. Matn tili: foydalanuvchi mavzuni qaysi tilda yozgan bo'lsa, o'sha tilda javob ber
-7. "image_prompt" faqat image_text yoki title layoutlarida bering — u yerda mos rasm tasviri uchun
-   qisqa ingliz tilida prompt yozing (masalan: "abstract blue gradient representing technology")
+2. Birinchi slayd har doim "title" turida bo'lishi kerak
+3. Oxirgi slayd "closing" yoki "stats_grid" turida bo'lishi mumkin (xulosa)
+4. Har bir kontent slaydi uchun MOS layout tanlang va turlarni ARALASHTIRIB ishlating — bir xil turni
+   ketma-ket 2 martadan ortiq ishlatmang:
+   - "bullets": ro'yxat (3-5 punkt), har biri title+detail bilan
+   - "two_column": ikki tushuncha/guruhni taqqoslash, har ustunda 2-3 punkt (title+detail)
+   - "timeline": ketma-ket bosqichlar/jarayon/tasniflash (3-4 bosqich, har biri title+detail)
+   - "icon_grid": 4 ta parallel jihat/xususiyat, har biri emoji ikon + title + detail bilan
+   - "stats_grid": 3-4 ta raqam/fakt (masalan o'lcham, son, foiz, muddat)
+   - "big_stat": bitta juda muhim yakka raqam/fakt uchun
+   - "quote": iqtibos yoki muhim tezis
+5. HAR BIR "detail" yoki bullet matni KAMIDA 8-15 so'zdan iborat bo'lsin — bitta so'zli yoki juda
+   qisqa javoblar taqiqlanadi, slayd bo'sh ko'rinmasligi kerak. Aniq, faktik, ma'lumotga boy yozing.
+6. "bullets" massividagi har bir element {"title": "...", "detail": "..."} obyekt bo'lsin (oddiy
+   satr emas) — title qisqa (3-6 so'z), detail tushuntiruvchi jumla (8-15 so'z)
+7. Matn tili: foydalanuvchi mavzuni qaysi tilda yozgan bo'lsa, o'sha tilda javob ber
+8. "tags" (title slaydida) — mavzuga oid 2-3 ta qisqa kalit so'z/kategoriya
 
 JSON formati:
 {
@@ -35,20 +44,53 @@ JSON formati:
       "type": "title",
       "heading": "...",
       "subheading": "...",
-      "image_prompt": "..."
+      "tags": ["...", "...", "..."]
     },
     {
       "type": "bullets",
       "heading": "...",
-      "bullets": ["...", "...", "..."]
+      "subheading": "... (ixtiyoriy qisqa kirish)",
+      "bullets": [
+        {"title": "...", "detail": "..."},
+        {"title": "...", "detail": "..."}
+      ]
     },
     {
       "type": "two_column",
       "heading": "...",
       "left_title": "...",
-      "left_points": ["...", "..."],
+      "left_points": [{"title": "...", "detail": "..."}, {"title": "...", "detail": "..."}],
       "right_title": "...",
-      "right_points": ["...", "..."]
+      "right_points": [{"title": "...", "detail": "..."}, {"title": "...", "detail": "..."}]
+    },
+    {
+      "type": "timeline",
+      "heading": "...",
+      "subheading": "... (ixtiyoriy)",
+      "steps": [
+        {"title": "...", "detail": "..."},
+        {"title": "...", "detail": "..."},
+        {"title": "...", "detail": "..."}
+      ]
+    },
+    {
+      "type": "icon_grid",
+      "heading": "...",
+      "subheading": "... (ixtiyoriy)",
+      "items": [
+        {"icon": "emoji", "title": "...", "detail": "..."},
+        {"icon": "emoji", "title": "...", "detail": "..."},
+        {"icon": "emoji", "title": "...", "detail": "..."},
+        {"icon": "emoji", "title": "...", "detail": "..."}
+      ]
+    },
+    {
+      "type": "stats_grid",
+      "heading": "...",
+      "stats": [
+        {"value": "12-14 sm", "label": "..."},
+        {"value": "500ml", "label": "..."}
+      ]
     },
     {
       "type": "big_stat",

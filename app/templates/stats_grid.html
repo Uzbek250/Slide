@@ -1,0 +1,43 @@
+{% extends "_base.html" %}
+{% block extra_style %}
+  .stats-row {
+    display: grid;
+    grid-template-columns: repeat({{ stats|length if stats|length <= 4 else 4 }}, 1fr);
+    gap: 32px;
+    flex: 1;
+    align-content: center;
+  }
+  .stat-box {
+    text-align: center;
+  }
+  .stat-num {
+    font-family: 'Manrope', sans-serif;
+    font-size: 96px;
+    font-weight: 800;
+    background: linear-gradient(135deg, var(--accent), var(--accent-2));
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    line-height: 1;
+    margin-bottom: 20px;
+  }
+  .stat-label {
+    font-size: 26px;
+    color: var(--text-secondary);
+    line-height: 1.4;
+  }
+{% endblock %}
+{% block content %}
+<div class="slide">
+  <div class="accent-bar"></div>
+  <div class="heading">{{ heading }}</div>
+  <div class="stats-row">
+    {% for s in stats %}
+    <div class="stat-box">
+      <div class="stat-num">{{ s.value }}</div>
+      <div class="stat-label">{{ s.label }}</div>
+    </div>
+    {% endfor %}
+  </div>
+  <div class="page-number">{{ page_num }}</div>
+</div>
+{% endblock %}

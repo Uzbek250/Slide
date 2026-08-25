@@ -1,0 +1,55 @@
+{% extends "_base.html" %}
+{% block extra_style %}
+  .subheading-block {
+    font-size: 28px;
+    color: var(--text-secondary);
+    margin-top: -28px;
+    margin-bottom: 44px;
+    max-width: 1500px;
+    line-height: 1.5;
+  }
+  .grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 40px 56px;
+    flex: 1;
+    align-content: center;
+  }
+  .grid-item {
+    display: flex;
+    flex-direction: column;
+  }
+  .grid-icon {
+    font-size: 48px;
+    margin-bottom: 20px;
+    line-height: 1;
+  }
+  .grid-title {
+    font-size: 32px;
+    font-weight: 800;
+    color: var(--text-primary);
+    margin-bottom: 12px;
+  }
+  .grid-detail {
+    font-size: 24px;
+    line-height: 1.5;
+    color: var(--text-secondary);
+  }
+{% endblock %}
+{% block content %}
+<div class="slide">
+  <div class="accent-bar"></div>
+  <div class="heading">{{ heading }}</div>
+  {% if subheading %}<div class="subheading-block">{{ subheading }}</div>{% endif %}
+  <div class="grid">
+    {% for item in items %}
+    <div class="grid-item">
+      <div class="grid-icon">{{ item.icon }}</div>
+      <div class="grid-title">{{ item.title }}</div>
+      <div class="grid-detail">{{ item.detail }}</div>
+    </div>
+    {% endfor %}
+  </div>
+  <div class="page-number">{{ page_num }}</div>
+</div>
+{% endblock %}

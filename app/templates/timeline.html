@@ -1,0 +1,88 @@
+{% extends "_base.html" %}
+{% block extra_style %}
+  .subheading-block {
+    font-size: 28px;
+    color: var(--text-secondary);
+    margin-top: -28px;
+    margin-bottom: 40px;
+    max-width: 1400px;
+    line-height: 1.5;
+  }
+  .steps {
+    display: flex;
+    flex-direction: column;
+    gap: 0;
+    flex: 1;
+    justify-content: center;
+    max-width: 1500px;
+  }
+  .step {
+    display: flex;
+    gap: 36px;
+    position: relative;
+    padding-bottom: 44px;
+  }
+  .step:last-child { padding-bottom: 0; }
+  .step-num-col {
+    flex-shrink: 0;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+  }
+  .step-num {
+    width: 68px;
+    height: 68px;
+    border-radius: 50%;
+    background: var(--accent);
+    color: var(--bg);
+    font-weight: 800;
+    font-size: 30px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+  }
+  .step-line {
+    width: 3px;
+    flex: 1;
+    background: var(--card-bg);
+    margin-top: 8px;
+  }
+  .step-body {
+    padding-top: 8px;
+  }
+  .step-title {
+    font-size: 34px;
+    font-weight: 800;
+    color: var(--text-primary);
+    margin-bottom: 10px;
+  }
+  .step-detail {
+    font-size: 26px;
+    line-height: 1.45;
+    color: var(--text-secondary);
+    max-width: 1300px;
+  }
+{% endblock %}
+{% block content %}
+<div class="slide">
+  <div class="accent-bar"></div>
+  <div class="heading">{{ heading }}</div>
+  {% if subheading %}<div class="subheading-block">{{ subheading }}</div>{% endif %}
+  <div class="steps">
+    {% for step in steps %}
+    <div class="step">
+      <div class="step-num-col">
+        <div class="step-num">{{ loop.index }}</div>
+        {% if not loop.last %}<div class="step-line"></div>{% endif %}
+      </div>
+      <div class="step-body">
+        <div class="step-title">{{ step.title }}</div>
+        <div class="step-detail">{{ step.detail }}</div>
+      </div>
+    </div>
+    {% endfor %}
+  </div>
+  <div class="page-number">{{ page_num }}</div>
+</div>
+{% endblock %}
