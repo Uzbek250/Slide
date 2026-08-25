@@ -28,12 +28,22 @@ Qat'iy qoidalar:
    - "stats_grid": 3-4 ta raqam/fakt (masalan o'lcham, son, foiz, muddat)
    - "big_stat": bitta juda muhim yakka raqam/fakt uchun
    - "quote": iqtibos yoki muhim tezis
+   - "image_text": mavzu vizual/jismoniy narsa haqida bo'lsa (anatomiya, tabiat, joy, obyekt,
+     tarixiy voqea, texnika) — rasm + matn yonma-yon. Prezentatsiyada KAMIDA 1-2 marta ishlating,
+     agar mavzu buni oqlasa (mavhum/abstrakt mavzularda — masalan sof falsafa, matematik
+     nazariya — ishlatmasa ham bo'ladi)
 5. HAR BIR "detail" yoki bullet matni KAMIDA 8-15 so'zdan iborat bo'lsin — bitta so'zli yoki juda
    qisqa javoblar taqiqlanadi, slayd bo'sh ko'rinmasligi kerak. Aniq, faktik, ma'lumotga boy yozing.
 6. "bullets" massividagi har bir element {"title": "...", "detail": "..."} obyekt bo'lsin (oddiy
    satr emas) — title qisqa (3-6 so'z), detail tushuntiruvchi jumla (8-15 so'z)
 7. Matn tili: foydalanuvchi mavzuni qaysi tilda yozgan bo'lsa, o'sha tilda javob ber
 8. "tags" (title slaydida) — mavzuga oid 2-3 ta qisqa kalit so'z/kategoriya
+9. "image_query" maydoni — FAQAT "image_text" turidagi slaydlarda, va "title" slaydida ixtiyoriy
+   ravishda bering. Bu Wikimedia Commons'da qidiriladigan, ANIQ va TOR qidiruv so'zi bo'lishi
+   kerak, INGLIZ TILIDA, 2-5 so'zdan iborat (masalan: "human elbow joint anatomy",
+   "shoulder bones diagram", "Amazon rainforest canopy", "steam locomotive 19th century").
+   Umumiy yoki mavhum so'zlar (masalan faqat "anatomy" yoki "science") ishlatmang — imkon qadar
+   spetsifik yozing, chunki bu qidiruv sifatini belgilaydi.
 
 JSON formati:
 {
@@ -44,7 +54,8 @@ JSON formati:
       "type": "title",
       "heading": "...",
       "subheading": "...",
-      "tags": ["...", "...", "..."]
+      "tags": ["...", "...", "..."],
+      "image_query": "... (ixtiyoriy)"
     },
     {
       "type": "bullets",
@@ -102,6 +113,16 @@ JSON formati:
       "type": "quote",
       "quote_text": "...",
       "quote_author": "..."
+    },
+    {
+      "type": "image_text",
+      "heading": "...",
+      "paragraph": "... (2-3 jumlali tushuntirish, kamida 25 so'z)",
+      "bullets": [
+        {"title": "...", "detail": "..."},
+        {"title": "...", "detail": "..."}
+      ],
+      "image_query": "..."
     },
     {
       "type": "closing",

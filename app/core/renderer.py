@@ -7,11 +7,18 @@ nazorat saqlaymiz (gradient, shrift, layout) — bular python-pptx'ning
 o'zida ishonchli chiqmaydi. Buning evaziga matn PowerPoint ichida
 tahrirlanmaydi (rasm sifatida joylashadi) — MVP uchun bu qabul qilinadigan
 chegara.
+
+RASM QIDIRISH: agar slayd JSON'ida "image_query" bo'lsa, render qilishdan oldin
+Wikimedia Commons'dan mos rasm qidiramiz. Topilmasa yoki tarmoq xatosi bo'lsa,
+slayd HECH QACHON "unutilib" bo'sh qolmaydi — image_text turi avtomatik ravishda
+rasmsiz layoutga (bullets) tushiriladi, title esa rasmsiz variantda davom etadi.
 """
 import os
 from pathlib import Path
 from jinja2 import Environment, FileSystemLoader
 from playwright.sync_api import sync_playwright
+
+from app.core.image_search import search_image
 
 TEMPLATES_DIR = Path(__file__).parent.parent / "templates"
 SLIDE_WIDTH = 1920
@@ -20,8 +27,49 @@ SLIDE_HEIGHT = 1080
 _jinja_env = Environment(loader=FileSystemLoader(str(TEMPLATES_DIR)))
 
 
+def _resolve_image(slide: dict) -> dict:
+    """
+    Agar slaydda image_query bo'lsa, Wikimedia'dan qidirib image_url va
+    image_credit maydonlarini qo'shadi. Har doim yangi dict qaytaradi
+    (original slide obyektini o'zgartirmaydi).
+
+    image_text turi uchun: rasm topilmasa, "bullets" turiga avtomatik almashadi
+    (paragraph -> subheading, bullets saqlanib qoladi) — shunda kontent
+    hech qachon yo'qolmaydi, faqat vizual taqdimoti o'zgaradi.
+    """
+    query = slide.get("image_query")
+    if not query:
+        return slide
+
+    result = search_image(query)
+    updated = dict(slide)
+
+    if result:
+        updated["image_url"] = result["url"]
+        author = result.get("author")
+        license_name = result.get("license")
+        if author or license_name:
+            credit_parts = [p for p in [author, license_name] if p]
+            updated["image_credit"] = " · ".join(credit_parts)
+        return updated
+
+    # Rasm topilmadi -> fallback
+    if slide.get("type") == "image_text":
+        updated["type"] = "bullets"
+        if slide.get("paragraph") and not slide.get("subheading"):
+            updated["subheading"] = slide["paragraph"]
+        # bullets maydoni allaqachon mavjud bo'lsa shunday qoladi
+        if not updated.get("bullets"):
+            updated["bullets"] = []
+    # title uchun image_url shunchaki qo'yilmaydi, shablon o'zi rasmsiz ishlaydi
+
+    return updated
+
+
 def render_slide_html(slide: dict, theme: str, page_num: int) -> str:
     """Bitta slayd uchun to'liq HTML matnini qaytaradi."""
+    slide = _resolve_image(slide)
+
     slide_type = slide.get("type", "bullets")
     template_name = f"{slide_type}.html"
 
@@ -42,8 +90,6 @@ def render_deck_to_images(deck: dict, output_dir: str) -> list[str]:
     theme = deck.get("theme", "minimal")
     image_paths = []
 
-    browser_path_env = os.environ.get("PLAYWRIGHT_BROWSERS_PATH")
-
     with sync_playwright() as p:
         browser = p.chromium.launch(
             args=["--no-sandbox", "--disable-dev-shm-usage"]
@@ -55,7 +101,9 @@ def render_deck_to_images(deck: dict, output_dir: str) -> list[str]:
 
         for i, slide in enumerate(deck["slides"]):
             html = render_slide_html(slide, theme, page_num=i + 1)
-            page.set_content(html, wait_until="networkidle")
+            # networkidle: tashqi rasm (Wikimedia) va shriftlar to'liq
+            # yuklanguncha kutadi, aks holda screenshot yarim tayyor bosilib qolishi mumkin
+            page.set_content(html, wait_until="networkidle", timeout=20000)
             img_path = os.path.join(output_dir, f"slide_{i:03d}.png")
             page.screenshot(path=img_path)
             image_paths.append(img_path)
