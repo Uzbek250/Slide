@@ -1,0 +1,36 @@
+{% extends "_base.html" %}
+{% block extra_style %}
+  .quote-slide {
+    justify-content: center;
+    align-items: flex-start;
+    height: 100%;
+  }
+  .quote-mark {
+    font-family: 'Manrope', sans-serif;
+    font-size: 180px;
+    color: var(--accent);
+    opacity: 0.35;
+    line-height: 0.5;
+    margin-bottom: 24px;
+  }
+  .quote-text {
+    font-size: 52px;
+    font-weight: 600;
+    line-height: 1.4;
+    max-width: 1500px;
+    color: var(--text-primary);
+  }
+  .quote-author {
+    font-size: 28px;
+    color: var(--text-secondary);
+    margin-top: 40px;
+  }
+{% endblock %}
+{% block content %}
+<div class="slide quote-slide">
+  <div class="accent-bar"></div>
+  <div class="quote-mark">&ldquo;</div>
+  <div class="quote-text">{{ quote_text }}</div>
+  {% if quote_author %}<div class="quote-author">— {{ quote_author }}</div>{% endif %}
+</div>
+{% endblock %}

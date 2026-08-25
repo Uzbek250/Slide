@@ -1,0 +1,37 @@
+{% extends "_base.html" %}
+{% block extra_style %}
+  .stat-slide {
+    justify-content: center;
+    align-items: center;
+    text-align: center;
+    height: 100%;
+  }
+  .stat-slide .heading {
+    font-size: 40px;
+    color: var(--text-secondary);
+    font-weight: 600;
+    margin-bottom: 24px;
+  }
+  .stat-number {
+    font-family: 'Manrope', sans-serif;
+    font-size: 260px;
+    font-weight: 800;
+    background: linear-gradient(135deg, var(--accent), var(--accent-2));
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    line-height: 1;
+  }
+  .stat-label {
+    font-size: 32px;
+    color: var(--text-secondary);
+    margin-top: 24px;
+  }
+{% endblock %}
+{% block content %}
+<div class="slide stat-slide">
+  <div class="accent-bar"></div>
+  {% if heading %}<div class="heading">{{ heading }}</div>{% endif %}
+  <div class="stat-number">{{ stat }}</div>
+  <div class="stat-label">{{ stat_label }}</div>
+</div>
+{% endblock %}

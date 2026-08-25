@@ -1,0 +1,46 @@
+{% extends "_base.html" %}
+{% block extra_style %}
+  .bullet-list {
+    display: flex;
+    flex-direction: column;
+    gap: 32px;
+    margin-top: 16px;
+  }
+  .bullet-item {
+    display: flex;
+    align-items: flex-start;
+    gap: 28px;
+    font-size: 36px;
+    line-height: 1.4;
+    color: var(--text-primary);
+  }
+  .bullet-num {
+    flex-shrink: 0;
+    width: 56px;
+    height: 56px;
+    border-radius: 50%;
+    background: var(--card-bg);
+    color: var(--accent);
+    font-weight: 800;
+    font-size: 26px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border: 2px solid var(--accent);
+  }
+{% endblock %}
+{% block content %}
+<div class="slide">
+  <div class="accent-bar"></div>
+  <div class="heading">{{ heading }}</div>
+  <div class="bullet-list">
+    {% for point in bullets %}
+    <div class="bullet-item">
+      <div class="bullet-num">{{ loop.index }}</div>
+      <div>{{ point }}</div>
+    </div>
+    {% endfor %}
+  </div>
+  <div class="page-number">{{ page_num }}</div>
+</div>
+{% endblock %}

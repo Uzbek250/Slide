@@ -1,0 +1,105 @@
+{# 
+  Umumiy baza shablon. Har bir slayd shu asosda quriladi.
+  {{ theme }} orqali rang sxemasi tanlanadi: minimal / corporate / gradient_dark / warm
+#}
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;800&family=Manrope:wght@400;600;800&display=swap');
+
+  :root {
+    {% if theme == 'gradient_dark' %}
+      --bg: #12121f;
+      --bg-gradient: linear-gradient(135deg, #1a1a2e 0%, #16213e 50%, #0f3460 100%);
+      --text-primary: #ffffff;
+      --text-secondary: #b8b8c8;
+      --accent: #6c5ce7;
+      --accent-2: #00d4ff;
+      --card-bg: rgba(255,255,255,0.06);
+    {% elif theme == 'corporate' %}
+      --bg: #ffffff;
+      --bg-gradient: #ffffff;
+      --text-primary: #0f172a;
+      --text-secondary: #475569;
+      --accent: #1d4ed8;
+      --accent-2: #0ea5e9;
+      --card-bg: #f1f5f9;
+    {% elif theme == 'warm' %}
+      --bg: #fdf6ec;
+      --bg-gradient: linear-gradient(135deg, #fdf6ec 0%, #fbe8d3 100%);
+      --text-primary: #3d2b1f;
+      --text-secondary: #7a5c44;
+      --accent: #e07a3e;
+      --accent-2: #d94f4f;
+      --card-bg: rgba(224,122,62,0.08);
+    {% else %} {# minimal #}
+      --bg: #fafafa;
+      --bg-gradient: #fafafa;
+      --text-primary: #111111;
+      --text-secondary: #666666;
+      --accent: #111111;
+      --accent-2: #888888;
+      --card-bg: #ffffff;
+    {% endif %}
+  }
+
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+
+  html, body {
+    width: 1920px;
+    height: 1080px;
+    overflow: hidden;
+    font-family: 'Inter', sans-serif;
+    background: var(--bg-gradient);
+    color: var(--text-primary);
+  }
+
+  .slide {
+    width: 1920px;
+    height: 1080px;
+    padding: 100px 120px;
+    display: flex;
+    flex-direction: column;
+    position: relative;
+  }
+
+  .accent-bar {
+    position: absolute;
+    top: 0; left: 0;
+    width: 12px; height: 100%;
+    background: linear-gradient(180deg, var(--accent), var(--accent-2));
+  }
+
+  .heading {
+    font-family: 'Manrope', sans-serif;
+    font-weight: 800;
+    font-size: 64px;
+    line-height: 1.15;
+    color: var(--text-primary);
+    margin-bottom: 48px;
+  }
+
+  .subheading {
+    font-size: 32px;
+    color: var(--text-secondary);
+    font-weight: 400;
+  }
+
+  .page-number {
+    position: absolute;
+    bottom: 48px;
+    right: 60px;
+    font-size: 20px;
+    color: var(--text-secondary);
+    opacity: 0.6;
+  }
+
+  {% block extra_style %}{% endblock %}
+</style>
+</head>
+<body>
+{% block content %}{% endblock %}
+</body>
+</html>

@@ -1,0 +1,32 @@
+{% extends "_base.html" %}
+{% block extra_style %}
+  .title-slide {
+    justify-content: center;
+    align-items: flex-start;
+    height: 100%;
+  }
+  .title-slide .heading {
+    font-size: 88px;
+    max-width: 1400px;
+  }
+  .title-slide .subheading {
+    max-width: 1100px;
+    margin-top: 12px;
+  }
+  .kicker {
+    font-size: 22px;
+    letter-spacing: 4px;
+    text-transform: uppercase;
+    color: var(--accent);
+    font-weight: 700;
+    margin-bottom: 32px;
+  }
+{% endblock %}
+{% block content %}
+<div class="slide title-slide">
+  <div class="accent-bar"></div>
+  <div class="kicker">Prezentatsiya</div>
+  <div class="heading">{{ heading }}</div>
+  {% if subheading %}<div class="subheading">{{ subheading }}</div>{% endif %}
+</div>
+{% endblock %}
