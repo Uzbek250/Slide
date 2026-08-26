@@ -97,6 +97,26 @@ ishlashi uchun `Starter` yoki undan yuqori tarifga o'tish tavsiya etiladi.
 
 ## O'zgarishlar tarixi
 
+**2026-08 (4):**
+- Rasm topilmayotgan muammoni diagnostika qilish uchun to'liq logging
+  qo'shildi (`image_search:` va `renderer:` prefikslari bilan Render
+  loglarida ko'rinadi) — sabab hozirgacha noaniq edi, chunki xatolar
+  jimgina yutilardi
+- `main.py`da logging INFO darajasiga sozlandi (standart WARNING edi,
+  ya'ni logger.info() chaqiruvlari hech qachon ko'rinmasdi)
+- Wikimedia so'rovidan `origin=*` parametri olib tashlandi (bu faqat
+  brauzer-JS CORS so'rovlari uchun kerak, server-tomonli so'rovda
+  keraksiz/potentsial muammoli)
+- Openverse (api.openverse.org) ikkinchi qatlam zaxira manba sifatida
+  qo'shildi — Wikimedia bo'sh/xato qaytarsa avtomatik sinaladi.
+  Ikkalasi ham API key talab qilmaydi
+- KEYINGI QADAM: Render loglarida `image_search[wikimedia]:` yoki
+  `image_search[openverse]:` satrlarini tekshirib, aniq status
+  kodini (403/timeout/bo'sh natija) ko'rish kerak — agar ikkalasi
+  ham doimiy 403 bersa, bu Render'ning IP diapazoni bloklangani
+  degani bo'lishi mumkin va boshqa yechim (masalan tashqi proxy
+  yoki kalitli API) kerak bo'ladi
+
 **2026-08 (3):**
 - Fayl nomi endi mavzudan yasaladi (`presentation.pptx` o'rniga masalan
   `Yurak-qon_tomir_tizimi.pptx`) — `/generate` javobida `filename` maydoni

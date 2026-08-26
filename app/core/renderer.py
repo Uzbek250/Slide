@@ -13,12 +13,15 @@ Wikimedia Commons'dan mos rasm qidiramiz. Topilmasa yoki tarmoq xatosi bo'lsa,
 slayd HECH QACHON "unutilib" bo'sh qolmaydi — image_text turi avtomatik ravishda
 rasmsiz layoutga (bullets) tushiriladi, title esa rasmsiz variantda davom etadi.
 """
+import logging
 import os
 from pathlib import Path
 from jinja2 import Environment, FileSystemLoader
 from playwright.sync_api import sync_playwright
 
 from app.core.image_search import search_image
+
+logger = logging.getLogger("renderer")
 
 TEMPLATES_DIR = Path(__file__).parent.parent / "templates"
 SLIDE_WIDTH = 1920
@@ -39,6 +42,10 @@ def _resolve_image(slide: dict) -> dict:
     """
     query = slide.get("image_query")
     if not query:
+        logger.info(
+            "renderer: slayd type=%r uchun Gemini image_query bermadi (heading=%r)",
+            slide.get("type"), slide.get("heading"),
+        )
         return slide
 
     result = search_image(query)
@@ -54,6 +61,10 @@ def _resolve_image(slide: dict) -> dict:
         return updated
 
     # Rasm topilmadi -> fallback
+    logger.warning(
+        "renderer: rasm topilmadi query=%r (type=%r) - fallback ishlatiladi",
+        query, slide.get("type"),
+    )
     if slide.get("type") == "image_text":
         updated["type"] = "bullets"
         if slide.get("paragraph") and not slide.get("subheading"):
