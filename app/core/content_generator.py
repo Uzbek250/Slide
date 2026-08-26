@@ -38,12 +38,16 @@ Qat'iy qoidalar:
    satr emas) — title qisqa (3-6 so'z), detail tushuntiruvchi jumla (8-15 so'z)
 7. Matn tili: foydalanuvchi mavzuni qaysi tilda yozgan bo'lsa, o'sha tilda javob ber
 8. "tags" (title slaydida) — mavzuga oid 2-3 ta qisqa kalit so'z/kategoriya
-9. "image_query" maydoni — FAQAT "image_text" turidagi slaydlarda, va "title" slaydida ixtiyoriy
-   ravishda bering. Bu Wikimedia Commons'da qidiriladigan, ANIQ va TOR qidiruv so'zi bo'lishi
-   kerak, INGLIZ TILIDA, 2-5 so'zdan iborat (masalan: "human elbow joint anatomy",
-   "shoulder bones diagram", "Amazon rainforest canopy", "steam locomotive 19th century").
-   Umumiy yoki mavhum so'zlar (masalan faqat "anatomy" yoki "science") ishlatmang — imkon qadar
-   spetsifik yozing, chunki bu qidiruv sifatini belgilaydi.
+9. "image_query" — TITLE slaydida DEYARLI HAR DOIM bering (faqat mavzu juda mavhum matematik/
+   falsafiy tushuncha bo'lsa qoldiring). "image_text" turida esa MAJBURIY. Bu Wikimedia
+   Commons'da qidiriladigan, ANIQ va TOR qidiruv so'zi bo'lishi kerak, INGLIZ TILIDA, 2-5
+   so'zdan iborat. Mavzu turiga qarab moslashtiring:
+   - Jismoniy/vizual narsa bo'lsa: "human elbow joint anatomy", "Amazon rainforest canopy"
+   - Mavhum/ijtimoiy-iqtisodiy mavzu bo'lsa ham baribir tegishli VIZUAL SIMVOL toping:
+     masalan "O'zbekiston iqtisodiyoti" -> "Tashkent city skyline" yoki "Uzbekistan flag",
+     "sun'iy intellekt" -> "neural network illustration", "ta'lim islohoti" -> "university
+     campus building". Har doim ANIQ obyekt/joy/narsa nomini bering, umumiy tushuncha emas.
+   - Umumiy yoki mavhum so'zlar (masalan faqat "economy" yoki "science") ishlatmang
 
 JSON formati:
 {

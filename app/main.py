@@ -4,6 +4,7 @@ Bot va backend ni ataylab ajratdik: agar kelajakda web frontend yoki
 boshqa mijoz (masalan Flutter ilova) qo'shilsa, backend o'zgarmaydi.
 """
 import os
+import re
 import uuid
 from fastapi import FastAPI, HTTPException, Request
 from fastapi.responses import FileResponse, HTMLResponse
@@ -19,6 +20,22 @@ templates = Jinja2Templates(directory=TEMPLATES_DIR)
 
 OUTPUT_DIR = "/tmp/slide_outputs"
 os.makedirs(OUTPUT_DIR, exist_ok=True)
+
+# file_id -> foydalanuvchiga ko'rsatiladigan .pptx fayl nomi (mavzudan yasalgan)
+_FILENAME_REGISTRY: dict[str, str] = {}
+
+
+def _slugify_filename(topic: str) -> str:
+    """
+    Mavzu matnidan xavfsiz fayl nomi yasaydi: papka ajratuvchilari, kavychalar
+    va boshqa maxsus belgilarni olib tashlaydi, bo'sh joylarni pastki chiziqqa
+    almashtiradi. Lotin va kiril harflari, raqamlar saqlanadi (o'zbekcha
+    mavzular ko'p hollarda shu alifbolarda bo'ladi).
+    """
+    cleaned = re.sub(r"[^\w\s-]", "", topic, flags=re.UNICODE).strip()
+    cleaned = re.sub(r"[\s]+", "_", cleaned)
+    cleaned = cleaned[:80]  # juda uzun mavzu nomini cheklash
+    return cleaned or "prezentatsiya"
 
 
 class GenerateRequest(BaseModel):
@@ -46,7 +63,10 @@ def generate(req: GenerateRequest):
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Generatsiya xatoligi: {e}")
 
-    return {"file_id": file_id}
+    display_name = f"{_slugify_filename(req.topic)}.pptx"
+    _FILENAME_REGISTRY[file_id] = display_name
+
+    return {"file_id": file_id, "filename": display_name}
 
 
 @app.get("/download/{file_id}")
@@ -54,8 +74,9 @@ def download(file_id: str):
     path = os.path.join(OUTPUT_DIR, f"{file_id}.pptx")
     if not os.path.exists(path):
         raise HTTPException(status_code=404, detail="Fayl topilmadi")
+    filename = _FILENAME_REGISTRY.get(file_id, "presentation.pptx")
     return FileResponse(
         path,
         media_type="application/vnd.openxmlformats-officedocument.presentationml.presentation",
-        filename="presentation.pptx",
+        filename=filename,
     )

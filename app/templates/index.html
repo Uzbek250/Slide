@@ -259,6 +259,7 @@ form.addEventListener('submit', async (e) => {
 
     const data = await resp.json();
     downloadLink.href = '/download/' + data.file_id;
+    downloadLink.setAttribute('download', data.filename || 'presentation.pptx');
     resultEl.classList.add('visible');
   } catch (err) {
     errorBox.textContent = err.message;

@@ -97,6 +97,20 @@ ishlashi uchun `Starter` yoki undan yuqori tarifga o'tish tavsiya etiladi.
 
 ## O'zgarishlar tarixi
 
+**2026-08 (3):**
+- Fayl nomi endi mavzudan yasaladi (`presentation.pptx` o'rniga masalan
+  `Yurak-qon_tomir_tizimi.pptx`) — `/generate` javobida `filename` maydoni
+  qaytariladi, `/download` shu nomni `Content-Disposition`da ishlatadi
+- Title slaydda rasm ("image_query") ko'pincha chiqmayotgan muammo
+  tuzatildi — Gemini promptida bu maydon "ixtiyoriy" emas, "deyarli har
+  doim kerak" deb belgilandi, va mavhum (iqtisodiy/ijtimoiy) mavzular
+  uchun ham mos vizual so'rov topish yo'riqnomasi qo'shildi (masalan
+  "O'zbekiston iqtisodiyoti" -> "Tashkent city skyline")
+- MUHIM: fayl nomlari xotirada (`_FILENAME_REGISTRY` dict) saqlanadi —
+  server qayta ishga tushsa (deploy/qayta yuklanish), eski file_id'lar
+  uchun nom "presentation.pptx"ga qaytadi. Kelajakda buni fayl nomining
+  o'ziga yoki bazaga ko'chirish kerak bo'lishi mumkin
+
 **2026-08 (2):**
 - Detail/subtitle matn shrift hajmi ko'tarildi (21-27px → 27-32px) —
   `bullets`, `two_column`, `timeline`, `icon_grid`, `image_text`
