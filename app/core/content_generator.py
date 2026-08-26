@@ -49,6 +49,23 @@ Qat'iy qoidalar:
 9. Har bir slaydning "heading"i mavzuga xos va aniq bo'lsin — umumiy sarlavhalardan
    ("Kirish", "Xulosa", "Qo'shimcha ma'lumot") imkon qadar qoching, o'rniga slayd
    mazmunini aniq ifodalovchi sarlavha yozing
+10. IMLO VA GRAMMATIKA: yozayotgan tilning imlo qoidalariga qat'iy rioya qiling.
+    O'zbek tilida yozsangiz — lotin yozuvida izchil yozing (kiril harflari bilan
+    aralashtirmang), apostrof belgisini to'g'ri joylarda ishlating (o', g' kabi
+    harflarda), tinish belgilarini to'g'ri qo'ying. Yozib bo'lgach o'z-o'zingizni
+    tekshiring: xato yozilgan so'z, noto'g'ri kelishik qo'shimchasi yoki
+    uyg'unlashmagan gap qurilishi bo'lmasin.
+11. FAKTIK ANIQLIK: raqamlar, sanalar, ismlar va statistik ma'lumotlarni faqat
+    ishonchli darajada bilsangiz keltiring. Aniq raqamni bilmasangiz, to'qib
+    chiqarish o'rniga umumiy tavsiflovchi ifoda ishlating (masalan "bir necha
+    o'n yillar davomida" — "1847 yilda" o'rniga, agar sanani aniq bilmasangiz).
+    Noto'g'ri yoki o'ylab topilgan faktlar berish qattiq taqiqlanadi — bu
+    o'quv/taqdimot kontekstida ishonchni yo'qotadi.
+12. MANTIQIY IZCHILLIK: butun taqdimotni bitta yaxlit hikoya sifatida quring —
+    slaydlar orasida bir xil faktni takrorlamang, keyingi slaydda aytiladigan
+    narsani oldindan aytib qo'ymang. Har bir slayd o'zidan oldingi slayd
+    ustiga mantiqiy qurilsin (masalan avval umumiy tuzilish, keyin tafsilotlar,
+    keyin ahamiyati/xulosa) — tasodifiy tartibda emas.
 
 JSON formati:
 {
@@ -158,6 +175,161 @@ def _parse_json_lenient(raw_text: str) -> dict:
         ) from e
 
 
+# Slayd turi bo'yicha "detail" darajasidagi matnlar uchun minimal so'z soni.
+# Bu Gemini'ga berilgan promptdagi talab bilan bir xil (10-18 so'z) — shu yerda
+# esa haqiqatan ham rioya qilinganini tekshiramiz.
+_MIN_DETAIL_WORDS = 6  # promptdagi 10-18 dan biroz yumshoqroq chegara — tabiiy
+                        # tarjima/uslub farqlari uchun joy qoldiradi, lekin
+                        # 1-3 so'zli "kalta" javoblarni baribir ushlaydi
+_MIN_CONTEXT_WORDS = 15  # big_stat/quote uchun (talab 20-30, biroz yumshoq)
+
+
+def _word_count(text: str) -> int:
+    return len((text or "").split())
+
+
+def _extract_point_items(point) -> list:
+    """
+    bullets/left_points/right_points/steps/items massivlaridagi elementlarni
+    normalizatsiya qiladi — ular {"title":..,"detail":..} yoki oddiy satr
+    bo'lishi mumkin.
+    """
+    if isinstance(point, dict):
+        return [point]
+    return []
+
+
+def find_quality_issues(slide: dict) -> list[str]:
+    """
+    Bitta slaydni tekshirib, "juda qisqa" yoki "bo'sh" deb topilgan
+    maydonlar haqida qisqa tavsif ro'yxatini qaytaradi. Bo'sh ro'yxat —
+    slayd sifat mezonlariga javob beradi degani.
+
+    Bu qat'iy grammatik/faktik tekshiruv EMAS (buni server ishonchli
+    baholay olmaydi) — faqat "shubhasiz kam matnli" holatlarni ushlaydi:
+    juda qisqa detail, bo'sh massiv, yo'q heading.
+    """
+    issues = []
+    slide_type = slide.get("type", "")
+    heading = slide.get("heading", "")
+
+    if slide_type != "quote" and not heading.strip():
+        issues.append("heading bo'sh")
+
+    def check_points(points: list, field_name: str):
+        if not points:
+            issues.append(f"{field_name} bo'sh")
+            return
+        for idx, p in enumerate(points):
+            for item in _extract_point_items(p):
+                detail = item.get("detail", "")
+                if _word_count(detail) < _MIN_DETAIL_WORDS:
+                    issues.append(
+                        f"{field_name}[{idx}].detail juda qisqa "
+                        f"({_word_count(detail)} so'z): {detail!r}"
+                    )
+
+    if slide_type == "bullets":
+        check_points(slide.get("bullets", []), "bullets")
+    elif slide_type == "two_column":
+        check_points(slide.get("left_points", []), "left_points")
+        check_points(slide.get("right_points", []), "right_points")
+    elif slide_type == "timeline":
+        check_points(slide.get("steps", []), "steps")
+    elif slide_type == "icon_grid":
+        check_points(slide.get("items", []), "items")
+    elif slide_type == "stats_grid":
+        stats = slide.get("stats", [])
+        if not stats:
+            issues.append("stats bo'sh")
+    elif slide_type == "big_stat":
+        context = slide.get("context", "")
+        if _word_count(context) < _MIN_CONTEXT_WORDS:
+            issues.append(
+                f"big_stat.context juda qisqa ({_word_count(context)} so'z)"
+            )
+    elif slide_type == "quote":
+        context = slide.get("context", "")
+        if _word_count(context) < _MIN_CONTEXT_WORDS:
+            issues.append(
+                f"quote.context juda qisqa ({_word_count(context)} so'z)"
+            )
+        if not slide.get("quote_text", "").strip():
+            issues.append("quote_text bo'sh")
+
+    return issues
+
+
+def _regenerate_slide(client: genai.Client, topic: str, slide: dict, issues: list[str]) -> dict:
+    """
+    Bitta muammoli slaydni Gemini'ga qayta yuborib, tuzatilgan versiyasini
+    so'raydi. Xato bo'lsa, original slaydni o'zgarishsiz qaytaradi — bu
+    yerda muvaffaqiyatsizlik butun generatsiyani to'xtatmasligi kerak,
+    faqat o'sha bitta slayd yaxshilanmasdan qolishi mumkin.
+    """
+    fix_prompt = (
+        f"Quyidagi slayd JSON obyektida sifat muammolari topildi:\n"
+        f"{json.dumps(issues, ensure_ascii=False)}\n\n"
+        f"Mavzu: {topic}\n"
+        f"Joriy slayd JSON:\n{json.dumps(slide, ensure_ascii=False)}\n\n"
+        f"Shu bitta slaydni qoidalarga (ayniqsa matn uzunligi va sifati) to'liq "
+        f"mos qilib qayta yoz. FAQAT shu bitta slaydning JSON obyektini qaytar, "
+        f"massiv yoki boshqa hech narsa emas — faqat bitta {{...}} obyekt."
+    )
+    try:
+        response = client.models.generate_content(
+            model=MODEL_NAME,
+            contents=fix_prompt,
+            config=types.GenerateContentConfig(
+                system_instruction=SYSTEM_PROMPT,
+                temperature=0.6,
+                response_mime_type="application/json",
+                max_output_tokens=2048,
+                thinking_config=types.ThinkingConfig(thinking_budget=0),
+            ),
+        )
+        raw_text = (response.text or "").strip()
+        if not raw_text:
+            return slide
+        fixed = _parse_json_lenient(raw_text)
+        # Model ba'zan {"slides": [...]} yoki {"slide": {...}} qaytarishi
+        # mumkin - eng keng tarqalgan variantlarni sinab ko'ramiz
+        if "type" in fixed:
+            return fixed
+        if "slide" in fixed and isinstance(fixed["slide"], dict):
+            return fixed["slide"]
+        if "slides" in fixed and fixed["slides"]:
+            return fixed["slides"][0]
+        return slide
+    except Exception:
+        # Qayta generatsiya muvaffaqiyatsiz bo'lsa, originalni saqlab qolamiz -
+        # bu hech qachon butun pipeline'ni to'xtatmasligi kerak
+        return slide
+
+
+def _ensure_slide_quality(client: genai.Client, topic: str, slides: list[dict]) -> list[dict]:
+    """
+    Har bir slaydni tekshiradi, muammo topilgan slaydlarni bittalab qayta
+    generatsiya qiladi (maksimal 1 marta har biri uchun — cheksiz tsiklga
+    tushib qolmaslik uchun).
+    """
+    result = []
+    for slide in slides:
+        issues = find_quality_issues(slide)
+        if issues:
+            fixed = _regenerate_slide(client, topic, slide, issues)
+            # Tuzatilgandan keyin ham muammo qolsa, baribir eng yaxshi
+            # variantni ishlatamiz (original vs tuzatilgan - kamroq
+            # muammosi borini tanlaymiz)
+            if len(find_quality_issues(fixed)) <= len(issues):
+                result.append(fixed)
+            else:
+                result.append(slide)
+        else:
+            result.append(slide)
+    return result
+
+
 def generate_deck_structure(topic: str, slide_count: int) -> dict:
     """
     Mavzu va slayd soni asosida to'liq JSON strukturani qaytaradi.
@@ -206,6 +378,11 @@ def generate_deck_structure(topic: str, slide_count: int) -> dict:
     # Slayd sonini talab qilingan songa moslashtirish (model ba'zan ±1 xato qilishi mumkin)
     slides = data.get("slides", [])
     if len(slides) > slide_count:
-        data["slides"] = slides[:slide_count]
+        slides = slides[:slide_count]
+
+    # Sifat nazorati: har bir slaydni tekshirib, juda qisqa/bo'sh matnli
+    # slaydlarni avtomatik qayta generatsiya qilamiz. Bu ustozga ko'rsatishdan
+    # oldin "unutib qoldirilgan" joylarning oldini oladi.
+    data["slides"] = _ensure_slide_quality(client, topic, slides)
 
     return data
