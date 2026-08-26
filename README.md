@@ -97,7 +97,14 @@ ishlashi uchun `Starter` yoki undan yuqori tarifga o'tish tavsiya etiladi.
 
 ## O'zgarishlar tarixi
 
-**2026-08:**
+**2026-08 (2):**
+- Detail/subtitle matn shrift hajmi ko'tarildi (21-27px → 27-32px) —
+  `bullets`, `two_column`, `timeline`, `icon_grid`, `image_text`
+  shablonlarida ikkinchi darajali matn (izoh qatorlari) 1920px
+  canvas'ga nisbatan juda kichik edi, uzoqdan yoki kichik ekranda
+  o'qishni qiyinlashtirardi
+
+**2026-08 (1):**
 - Fayl hajmi optimallashtirildi: slaydlar endi PNG o'rniga JPEG
   (quality=90) sifatida screenshot qilinadi — o'rtacha 10x kichikroq
   fayl (10 slaydli deck ~19MB'dan ~2MB'ga tushdi), matn/gradient
