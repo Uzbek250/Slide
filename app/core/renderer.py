@@ -112,9 +112,54 @@ def render_deck_to_images(deck: dict, output_dir: str) -> list[str]:
 
         for i, slide in enumerate(deck["slides"]):
             html = render_slide_html(slide, theme, page_num=i + 1)
-            # networkidle: tashqi rasm (Wikimedia) va shriftlar to'liq
-            # yuklanguncha kutadi, aks holda screenshot yarim tayyor bosilib qolishi mumkin
-            page.set_content(html, wait_until="networkidle", timeout=20000)
+            # networkidle: tashqi rasm (Wikimedia/Openverse) va shriftlar
+            # so'rovlari tugaguncha kutadi. Lekin bu rasmning EKRANGA
+            # CHIZILGANINI (decode/paint) kafolatlamaydi - rasm ba'zan
+            # tarmoqdan kelib bo'lgan, lekin browser hali uni chizmagan
+            # holatda screenshot olinib, natija qora chiqishi mumkin edi.
+            #
+            # HIMOYA: agar tashqi rasm serveri juda sekin/javobsiz bo'lib,
+            # networkidle 20 soniyada yetib bo'lmasa, TimeoutError tashlanadi.
+            # Bunday holatda ham slayd matni butunlay yo'qolib qolmasligi
+            # uchun "load" holatiga (faqat asosiy HTML yuklanishi, tashqi
+            # rasmlarni kutmaydi) tushib, screenshot baribir olinadi -
+            # natijada eng yomon holatda rasm yo'q, lekin matn bor bo'ladi.
+            try:
+                page.set_content(html, wait_until="networkidle", timeout=20000)
+            except Exception as e:
+                logger.warning(
+                    "renderer: networkidle timeout slide=%d, 'load' bilan qayta urinilmoqda: %s",
+                    i, e,
+                )
+                page.set_content(html, wait_until="load", timeout=10000)
+
+            # Har bir <img> uchun decode() orqali chizishga tayyor bo'lishini
+            # kutamiz. Bitta rasm juda sekin/muvaffaqiyatsiz bo'lsa ham,
+            # try/except orqali shu rasmni o'tkazib yuboramiz - butun
+            # generatsiya to'xtab qolmaydi, faqat o'sha rasm bo'sh joy
+            # sifatida qoladi (bu holatda ham matn hech qachon yo'qolmaydi,
+            # chunki bu faqat rasm elementiga tegishli kutish).
+            try:
+                page.eval_on_selector_all(
+                    "img",
+                    """
+                    async (imgs) => {
+                        await Promise.all(imgs.map(img => {
+                            if (img.complete) return img.decode().catch(() => {});
+                            return new Promise(resolve => {
+                                img.addEventListener('load', () => img.decode().then(resolve).catch(resolve));
+                                img.addEventListener('error', resolve);
+                                // Bitta rasm uchun maksimal 8 soniya kutamiz -
+                                // undan ko'p kutish butun slaydni sekinlashtiradi
+                                setTimeout(resolve, 8000);
+                            });
+                        }));
+                    }
+                    """,
+                )
+            except Exception as e:
+                logger.warning("renderer: rasm decode kutishda xato slide=%d error=%s", i, e)
+
             img_path = os.path.join(output_dir, f"slide_{i:03d}.jpg")
             # JPEG (quality=90) — PNG'ga nisbatan 3-5x kichikroq fayl beradi,
             # gradient/rang fonlarda lossless PNG hech qanday amaliy sifat

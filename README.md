@@ -97,6 +97,17 @@ ishlashi uchun `Starter` yoki undan yuqori tarifga o'tish tavsiya etiladi.
 
 ## O'zgarishlar tarixi
 
+**2026-08 (5):**
+- KRITIK TUZATISH: ba'zi slaydlarda rasm o'rniga qora to'rtburchak
+  chiqib, HATTO MATN HAM YO'QOLIB QOLAYOTGAN muammo tuzatildi. Sabab:
+  `networkidle` faqat tarmoq so'rovlari tugashini kutadi, rasmning
+  ekranga chizilishini (decode/paint) kafolatlamaydi - ba'zan rasm
+  hali chizilmagan holatda screenshot olinardi. Yechim: har bir
+  `<img>` uchun JS orqali `decode()` tugashini kutish (max 8s/rasm) +
+  agar networkidle 20s ichida tugamasa `load` holatiga fallback -
+  eng yomon holatda ham matn hech qachon yo'qolmaydi, faqat rasm
+  bo'sh qoladi
+
 **2026-08 (4):**
 - Rasm topilmayotgan muammoni diagnostika qilish uchun to'liq logging
   qo'shildi (`image_search:` va `renderer:` prefikslari bilan Render
