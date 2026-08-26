@@ -14,7 +14,7 @@
   }
   .stat-number {
     font-family: 'Manrope', sans-serif;
-    font-size: 260px;
+    font-size: 240px;
     font-weight: 800;
     background: linear-gradient(135deg, var(--accent), var(--accent-2));
     -webkit-background-clip: text;
@@ -22,10 +22,18 @@
     line-height: 1;
   }
   .stat-label {
-    font-size: 32px;
+    font-size: 34px;
+    color: var(--text-primary);
+    font-weight: 700;
+    margin-top: 28px;
+  }
+  .stat-context {
+    font-size: 26px;
+    line-height: 1.5;
     color: var(--text-secondary);
-    font-weight: 600;
+    font-weight: 500;
     margin-top: 24px;
+    max-width: 1200px;
   }
 {% endblock %}
 {% block content %}
@@ -34,5 +42,7 @@
   {% if heading %}<div class="heading">{{ heading }}</div>{% endif %}
   <div class="stat-number">{{ stat }}</div>
   <div class="stat-label">{{ stat_label }}</div>
+  {% if context %}<div class="stat-context">{{ context }}</div>{% endif %}
+  <div class="page-number">{{ page_num }}</div>
 </div>
 {% endblock %}

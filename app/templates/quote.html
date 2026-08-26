@@ -26,6 +26,16 @@
     font-weight: 600;
     margin-top: 40px;
   }
+  .quote-context {
+    font-size: 26px;
+    line-height: 1.5;
+    color: var(--text-secondary);
+    font-weight: 500;
+    margin-top: 36px;
+    max-width: 1400px;
+    padding-top: 32px;
+    border-top: 2px solid var(--card-bg);
+  }
 {% endblock %}
 {% block content %}
 <div class="slide quote-slide">
@@ -33,5 +43,7 @@
   <div class="quote-mark">&ldquo;</div>
   <div class="quote-text">{{ quote_text }}</div>
   {% if quote_author %}<div class="quote-author">— {{ quote_author }}</div>{% endif %}
+  {% if context %}<div class="quote-context">{{ context }}</div>{% endif %}
+  <div class="page-number">{{ page_num }}</div>
 </div>
 {% endblock %}

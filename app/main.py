@@ -1,7 +1,6 @@
 """
-FastAPI backend. Telegram bot shu servisga HTTP orqali murojaat qiladi.
-Bot va backend ni ataylab ajratdik: agar kelajakda web frontend yoki
-boshqa mijoz (masalan Flutter ilova) qo'shilsa, backend o'zgarmaydi.
+FastAPI backend: veb-forma orqali mavzu qabul qiladi, Gemini + Playwright
+yordamida taqdimot generatsiya qiladi va .pptx faylini qaytaradi.
 """
 import logging
 import os
@@ -14,18 +13,17 @@ from pydantic import BaseModel, Field
 
 from app.core.pipeline import generate_presentation
 
-# Standart logging darajasi WARNING - bizning image_search/renderer
-# modullaridagi logger.info() chaqiruvlari shu sozlamasiz Render
-# loglarida ko'rinmay qoladi. INFO darajasini yoqamiz va formatga
-# vaqt+modul nomini qo'shamiz, shunda "image_search:" yoki "renderer:"
-# bo'yicha qidirish oson bo'ladi.
+# Standart logging darajasi WARNING - bizning ichki modullardagi
+# logger.info() chaqiruvlari shu sozlamasiz Render loglarida ko'rinmay
+# qoladi. INFO darajasini yoqamiz va formatga vaqt+modul nomini
+# qo'shamiz, shunda qidirish oson bo'ladi.
 logging.basicConfig(
     level=logging.INFO,
     format="%(asctime)s [%(name)s] %(levelname)s: %(message)s",
 )
 # httpx har bir so'rovni INFO darajasida logga yozadi - bizga faqat
-# o'zimizning image_search/renderer xabarlari kerak, shuning uchun
-# httpx'ning ortiqcha "chiqindi" logini pasaytiramiz
+# o'zimizning modullar xabarlari kerak, shuning uchun httpx'ning
+# ortiqcha "chiqindi" logini pasaytiramiz
 logging.getLogger("httpx").setLevel(logging.WARNING)
 
 app = FastAPI(title="Slide Generator API")
