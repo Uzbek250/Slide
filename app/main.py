@@ -34,8 +34,13 @@ templates = Jinja2Templates(directory=TEMPLATES_DIR)
 OUTPUT_DIR = "/tmp/slide_outputs"
 os.makedirs(OUTPUT_DIR, exist_ok=True)
 
-# file_id -> foydalanuvchiga ko'rsatiladigan .pptx fayl nomi (mavzudan yasalgan)
-_FILENAME_REGISTRY: dict[str, str] = {}
+# file_id -> (foydalanuvchiga ko'rsatiladigan fayl nomi, format)
+_FILENAME_REGISTRY: dict[str, tuple[str, str]] = {}
+
+_MEDIA_TYPES = {
+    "pptx": "application/vnd.openxmlformats-officedocument.presentationml.presentation",
+    "pdf": "application/pdf",
+}
 
 
 def _slugify_filename(topic: str) -> str:
@@ -54,6 +59,7 @@ def _slugify_filename(topic: str) -> str:
 class GenerateRequest(BaseModel):
     topic: str = Field(..., min_length=2, max_length=300)
     slide_count: int = Field(..., ge=3, le=20)  # 20+ = Gemini free tier/vaqt uchun xavfli
+    output_format: str = Field("pptx", pattern="^(pptx|pdf)$")
 
 
 @app.get("/", response_class=HTMLResponse)
@@ -69,27 +75,28 @@ def health():
 @app.post("/generate")
 def generate(req: GenerateRequest):
     file_id = uuid.uuid4().hex
-    output_path = os.path.join(OUTPUT_DIR, f"{file_id}.pptx")
+    ext = req.output_format
+    output_path = os.path.join(OUTPUT_DIR, f"{file_id}.{ext}")
 
     try:
-        generate_presentation(req.topic, req.slide_count, output_path)
+        generate_presentation(req.topic, req.slide_count, output_path, output_format=ext)
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Generatsiya xatoligi: {e}")
 
-    display_name = f"{_slugify_filename(req.topic)}.pptx"
-    _FILENAME_REGISTRY[file_id] = display_name
+    display_name = f"{_slugify_filename(req.topic)}.{ext}"
+    _FILENAME_REGISTRY[file_id] = (display_name, ext)
 
     return {"file_id": file_id, "filename": display_name}
 
 
 @app.get("/download/{file_id}")
 def download(file_id: str):
-    path = os.path.join(OUTPUT_DIR, f"{file_id}.pptx")
+    filename, ext = _FILENAME_REGISTRY.get(file_id, ("presentation.pptx", "pptx"))
+    path = os.path.join(OUTPUT_DIR, f"{file_id}.{ext}")
     if not os.path.exists(path):
         raise HTTPException(status_code=404, detail="Fayl topilmadi")
-    filename = _FILENAME_REGISTRY.get(file_id, "presentation.pptx")
     return FileResponse(
         path,
-        media_type="application/vnd.openxmlformats-officedocument.presentationml.presentation",
+        media_type=_MEDIA_TYPES.get(ext, "application/octet-stream"),
         filename=filename,
     )

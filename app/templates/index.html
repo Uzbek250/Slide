@@ -102,6 +102,37 @@
     gap: 16px;
   }
   select { max-width: 140px; cursor: pointer; }
+  .format-toggle {
+    display: flex;
+    gap: 10px;
+  }
+  .format-option {
+    flex: 1;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    background: #0E1013;
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    padding: 11px 10px;
+    cursor: pointer;
+    font-size: 13px;
+    font-weight: 600;
+    color: var(--muted);
+    margin-bottom: 0;
+    text-transform: none;
+    letter-spacing: 0;
+    transition: border-color 0.15s ease, color 0.15s ease;
+  }
+  .format-option input {
+    accent-color: var(--accent);
+    margin: 0;
+  }
+  .format-option:has(input:checked) {
+    border-color: var(--accent);
+    color: var(--text);
+  }
   button {
     width: 100%;
     background: var(--accent);
@@ -206,6 +237,19 @@
           <option value="20">20</option>
         </select>
       </div>
+      <div class="field">
+        <label>Fayl turi</label>
+        <div class="format-toggle">
+          <label class="format-option">
+            <input type="radio" name="output_format" value="pptx" checked>
+            <span>PowerPoint (.pptx)</span>
+          </label>
+          <label class="format-option">
+            <input type="radio" name="output_format" value="pdf">
+            <span>PDF (.pdf)</span>
+          </label>
+        </div>
+      </div>
       <button type="submit" id="submitBtn">Yaratish</button>
     </form>
 
@@ -244,12 +288,13 @@ form.addEventListener('submit', async (e) => {
 
   const topic = document.getElementById('topic').value;
   const slideCount = parseInt(document.getElementById('slideCount').value, 10);
+  const outputFormat = document.querySelector('input[name="output_format"]:checked').value;
 
   try {
     const resp = await fetch('/generate', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ topic: topic, slide_count: slideCount })
+      body: JSON.stringify({ topic: topic, slide_count: slideCount, output_format: outputFormat })
     });
 
     if (!resp.ok) {
