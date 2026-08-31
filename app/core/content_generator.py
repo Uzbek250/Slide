@@ -70,7 +70,6 @@ Qat'iy qoidalar:
 JSON formati:
 {
   "title": "Prezentatsiya nomi",
-  "theme": "minimal" | "corporate" | "gradient_dark" | "warm",
   "slides": [
     {
       "type": "title",
@@ -330,11 +329,20 @@ def _ensure_slide_quality(client: genai.Client, topic: str, slides: list[dict]) 
     return result
 
 
-def generate_deck_structure(topic: str, slide_count: int) -> dict:
+_VALID_THEMES = {"minimal", "corporate", "warm", "forest"}
+
+
+def generate_deck_structure(topic: str, slide_count: int, theme: str = "minimal") -> dict:
     """
     Mavzu va slayd soni asosida to'liq JSON strukturani qaytaradi.
+    theme - foydalanuvchi tanlagan dizayn (Gemini'dan so'ralmaydi, chunki bu
+    ilova faqat matn/struktura generatsiya qiladi - dizayn butunlay serverda
+    HTML shablonlar orqali beriladi).
     """
     client = get_client()
+
+    if theme not in _VALID_THEMES:
+        theme = "minimal"
 
     user_prompt = (
         f"Mavzu: {topic}\n"
@@ -384,5 +392,9 @@ def generate_deck_structure(topic: str, slide_count: int) -> dict:
     # slaydlarni avtomatik qayta generatsiya qilamiz. Bu ustozga ko'rsatishdan
     # oldin "unutib qoldirilgan" joylarning oldini oladi.
     data["slides"] = _ensure_slide_quality(client, topic, slides)
+
+    # Dizayn foydalanuvchi tanlovi bilan belgilanadi - model chiqargan
+    # har qanday "theme" maydoni (agar bo'lsa) e'tiborsiz qoldiriladi.
+    data["theme"] = theme
 
     return data

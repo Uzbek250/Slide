@@ -1,6 +1,8 @@
 {# 
   Umumiy baza shablon. Har bir slayd shu asosda quriladi.
-  {{ theme }} orqali rang sxemasi tanlanadi: minimal / corporate / gradient_dark / warm
+  {{ theme }} orqali rang sxemasi tanlanadi: minimal / corporate / warm / forest
+  Barcha temalar OQ fonli - printerda siyoh tejash uchun ataylab shunday
+  qilingan, faqat accent rang (chiziq, sarlavha, teg ranglari) farqlanadi.
 #}
 <!DOCTYPE html>
 <html>
@@ -10,15 +12,7 @@
   @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;800&family=Manrope:wght@400;600;800&display=swap');
 
   :root {
-    {% if theme == 'gradient_dark' %}
-      --bg: #12121f;
-      --bg-gradient: linear-gradient(135deg, #1a1a2e 0%, #16213e 50%, #0f3460 100%);
-      --text-primary: #ffffff;
-      --text-secondary: #d4d4de;
-      --accent: #8b7cf6;
-      --accent-2: #22d3ee;
-      --card-bg: rgba(255,255,255,0.08);
-    {% elif theme == 'corporate' %}
+    {% if theme == 'corporate' %}
       --bg: #ffffff;
       --bg-gradient: #ffffff;
       --text-primary: #0f172a;
@@ -27,16 +21,24 @@
       --accent-2: #0ea5e9;
       --card-bg: #f1f5f9;
     {% elif theme == 'warm' %}
-      --bg: #fdf6ec;
-      --bg-gradient: linear-gradient(135deg, #fdf6ec 0%, #fbe8d3 100%);
+      --bg: #ffffff;
+      --bg-gradient: #ffffff;
       --text-primary: #2b1d13;
       --text-secondary: #5c4330;
       --accent: #c2571f;
       --accent-2: #b83a3a;
-      --card-bg: rgba(224,122,62,0.1);
+      --card-bg: #fdf6ec;
+    {% elif theme == 'forest' %}
+      --bg: #ffffff;
+      --bg-gradient: #ffffff;
+      --text-primary: #0d0d0d;
+      --text-secondary: #3d3d3d;
+      --accent: #0f6e56;
+      --accent-2: #1d9e75;
+      --card-bg: #e1f5ee;
     {% else %} {# minimal #}
-      --bg: #fafafa;
-      --bg-gradient: #fafafa;
+      --bg: #ffffff;
+      --bg-gradient: #ffffff;
       --text-primary: #0d0d0d;
       --text-secondary: #3d3d3d;
       --accent: #111111;

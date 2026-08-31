@@ -60,6 +60,7 @@ class GenerateRequest(BaseModel):
     topic: str = Field(..., min_length=2, max_length=300)
     slide_count: int = Field(..., ge=3, le=20)  # 20+ = Gemini free tier/vaqt uchun xavfli
     output_format: str = Field("pptx", pattern="^(pptx|pdf)$")
+    theme: str = Field("minimal", pattern="^(minimal|corporate|warm|forest)$")
 
 
 @app.get("/", response_class=HTMLResponse)
@@ -79,7 +80,10 @@ def generate(req: GenerateRequest):
     output_path = os.path.join(OUTPUT_DIR, f"{file_id}.{ext}")
 
     try:
-        generate_presentation(req.topic, req.slide_count, output_path, output_format=ext)
+        generate_presentation(
+            req.topic, req.slide_count, output_path,
+            output_format=ext, theme=req.theme,
+        )
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Generatsiya xatoligi: {e}")
 

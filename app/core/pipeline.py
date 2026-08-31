@@ -12,14 +12,19 @@ from app.core.pdf_builder import build_pdf
 
 
 def generate_presentation(
-    topic: str, slide_count: int, output_path: str, output_format: str = "pptx"
+    topic: str,
+    slide_count: int,
+    output_path: str,
+    output_format: str = "pptx",
+    theme: str = "minimal",
 ) -> str:
     """
     To'liq oqimni ishga tushiradi va tayyor fayl yo'lini qaytaradi.
     output_format: "pptx" yoki "pdf" - faqat oxirgi yig'ish bosqichi farqlanadi,
     mavzu -> Gemini JSON -> HTML render -> rasm bosqichlari umumiy.
+    theme: foydalanuvchi tanlagan dizayn (minimal / corporate / warm / forest).
     """
-    deck = generate_deck_structure(topic, slide_count)
+    deck = generate_deck_structure(topic, slide_count, theme=theme)
 
     with tempfile.TemporaryDirectory() as tmp_dir:
         image_paths = render_deck_to_images(deck, tmp_dir)
