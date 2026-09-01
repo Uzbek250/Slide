@@ -1,8 +1,8 @@
 # Slide Generator
 
-Veb-ilova: mavzu + slaydlar soni → tayyor `.pptx` fayl.
+Veb-ilova: mavzu + slaydlar soni → tayyor `.pptx` yoki `.pdf` fayl.
 Gemini API kontent (matn/struktura) yaratadi, Playwright + HTML/CSS chiroyli
-slayd dizaynini renderlaydi, python-pptx ularni bitta faylga yig'adi.
+slayd dizaynini renderlaydi, python-pptx/Pillow ularni bitta faylga yig'adi.
 
 Ilova ataylab **faqat matnga** asoslangan — rasm yoki fotosurat ishlatilmaydi.
 Vizual boylik layout xilma-xilligi, ikonlar (emoji), raqamlar, tipografiya
@@ -11,7 +11,7 @@ va rang orqali beriladi.
 ## Arxitektura
 
 ```
-Brauzer (index.html — mavzu kiritish formasi)
+Brauzer (index.html — mavzu, slayd soni, fayl turi, dizayn tanlash formasi)
         │  POST /generate
         ▼
 FastAPI backend (Docker, Chromium bilan)
@@ -19,14 +19,14 @@ FastAPI backend (Docker, Chromium bilan)
         ├─ Gemini API → slayd JSON struktura (matn)
         ├─ Jinja2 + HTML shablon → har slayd uchun HTML
         ├─ Playwright → har HTML'ni JPEG screenshot
-        └─ python-pptx → JPEG'larni .pptx ga yig'ish
+        └─ python-pptx yoki Pillow → JPEG'larni .pptx/.pdf ga yig'ish
 ```
 
 Bitta servis — alohida bot yoki worker kerak emas.
 
 ## Slayd shablonlari
 
-`app/templates/` papkasida 8 ta layout turi:
+`app/templates/` papkasida 10 ta layout turi:
 - `title` — sarlavha, tag'lar
 - `bullets` — raqamlangan ro'yxat (title + detail)
 - `two_column` — ikki ustunli taqqoslash
@@ -35,15 +35,24 @@ Bitta servis — alohida bot yoki worker kerak emas.
 - `stats_grid` — raqamli statistika
 - `big_stat` — bitta katta raqam + majburiy kontekst matn
 - `quote` — iqtibos + majburiy kontekst matn
+- `bar_chart` — ustunli diagramma (faqat mavzuga mos taqqoslanadigan sonli
+  ma'lumot bo'lsa ishlatiladi, majburiy emas)
+- `table` — ustun/qatorli jadval (faqat mavzuga mos tuzilgan ma'lumot
+  bo'lsa ishlatiladi, majburiy emas)
 - `closing` — yakuniy slayd
 
-4 ta tema: `minimal`, `corporate`, `gradient_dark`, `warm` — `_base.html`da
-CSS o'zgaruvchilar orqali boshqariladi.
+4 ta tema: `minimal`, `corporate`, `warm`, `forest` — `_base.html`da
+CSS o'zgaruvchilar orqali boshqariladi. **Barcha temalar oq fonli** —
+printerda siyoh tejash uchun ataylab shunday qilingan, faqat urg'u rangi
+(chiziq, sarlavha, teg ranglari) farqlanadi. Dizaynni Gemini emas,
+foydalanuvchi formadan bevosita tanlaydi.
 
 **Matn zichligi:** promptda har bir bullet/detail matni kamida 10-18 so'z
 bo'lishi, `big_stat` va `quote` kabi "kam matnli" layoutlarda qo'shimcha
 kontekst (kamida 20-30 so'z) berilishi qat'iy talab qilinadi — maqsad
-hech qanday slayd bo'sh yoki yuzaki ko'rinmasligi.
+hech qanday slayd bo'sh yoki yuzaki ko'rinmasligi. Generatsiyadan keyin
+har bir slayd avtomatik tekshiriladi (`_ensure_slide_quality`) — juda
+qisqa yoki bo'sh chiqqan slaydlar Gemini'dan qayta so'raladi.
 
 ## Lokal ishga tushirish
 
@@ -79,13 +88,17 @@ natija `test_output/` papkasida chiqadi.
 
 **MUHIM — xotira haqida:** Chromium'ga kamida ~1GB RAM tavsiya etiladi.
 Render'ning free tarifi (512MB) bilan ba'zan "out of memory" xatosi
-chiqishi mumkin, ayniqsa bir nechta so'rov bir vaqtda kelsa. Barqaror
-ishlashi uchun `Starter` yoki undan yuqori tarifga o'tish tavsiya etiladi.
+chiqishi mumkin, ayniqsa bir nechta so'rov bir vaqtda kelsa. Hozircha
+faqat bitta foydalanuvchi (loyiha egasi) uchun ishlatilyapti, shu sababli
+rate limiting/queue hali qo'shilmagan. Kelajakda 4 CPU / 8GB RAM'li
+Contabo VPS'ga ko'chirish rejalashtirilgan.
 
 ## Keyingi qadamlar (hali qilinmagan)
 
 - [ ] Rate limiting — bir foydalanuvchi ketma-ket ko'p so'rov yubormasin
 - [ ] Ko'p bir vaqtdagi so'rovlar uchun navbat (queue) tizimi
-- [ ] Gemini javobi sifatini yanada nazorat qilish (masalan har bir
-      detail matnining so'z sonini serverda tekshirib, juda qisqa
-      bo'lsa qayta so'rash)
+- [ ] Har bir slaydda grammatika/faktik xato tekshiruvi (hozir faqat
+      so'z soni tekshiriladi)
+- [ ] Fayllarni doimiy saqlash (hozir `/tmp` — server qayta ishga
+      tushsa eski fayllar yo'qoladi)
+
