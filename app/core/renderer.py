@@ -57,7 +57,10 @@ def render_deck_to_images(deck: dict, output_dir: str) -> list[str]:
         )
         page = browser.new_page(
             viewport={"width": SLIDE_WIDTH, "height": SLIDE_HEIGHT},
-            device_scale_factor=2,  # retina — HD sifat
+            device_scale_factor=1,  # 1920x1080 - vektor matn/emoji uchun
+            # sifat farqi ko'zga sezilmaydi (na ekranda, na chop etishda),
+            # lekin render vaqti va fayl hajmi sezilarli kamayadi (o'lchangan:
+            # scale=2 dan ~2.6x tezroq, sekin VPS/noutbuklarda muhim)
         )
 
         for i, slide in enumerate(deck["slides"]):
