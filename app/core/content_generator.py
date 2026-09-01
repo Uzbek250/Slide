@@ -24,7 +24,10 @@ Qat'iy qoidalar:
 2. Birinchi slayd har doim "title" turida bo'lishi kerak
 3. Oxirgi slayd "closing" yoki "stats_grid" turida bo'lishi mumkin (xulosa)
 4. Har bir kontent slaydi uchun MOS layout tanlang va turlarni ARALASHTIRIB ishlating — bir xil
-   turni ketma-ket 2 martadan ortiq ishlatmang:
+   turni ketma-ket 2 martadan ortiq ishlatmang. "bar_chart" va "table" MAJBURIY EMAS — faqat
+   mavzuda haqiqatan taqqoslanadigan sonli ma'lumot yoki jadval shaklida ifodalash mantiqiy
+   bo'lgan joyda ishlating (masalan tarix, adabiyot, falsafa kabi mavzularda ularni zo'rma-zo'raki
+   qo'shmang):
    - "bullets": ro'yxat (3-5 punkt), har biri title+detail bilan — ENG KO'P ishlatiladigan tur
    - "two_column": ikki tushuncha/guruhni taqqoslash, har ustunda 2-3 punkt (title+detail)
    - "timeline": ketma-ket bosqichlar/jarayon/tasniflash (3-4 bosqich, har biri title+detail)
@@ -37,6 +40,13 @@ Qat'iy qoidalar:
    - "quote": iqtibos yoki muhim tezis — LEKIN "context" maydoni MAJBURIY va kamida 20-30
      so'zdan iborat bo'lishi kerak (iqtibosning ahamiyati/kontekstini tushuntiradi).
      Prezentatsiyada 1 martadan ko'p ishlatmang.
+   - "bar_chart": 2-6 ta qiymatni ustunli diagramma sifatida solishtirish — FAQAT haqiqatan
+     bir-biriga solishtiriladigan sonli ma'lumot bo'lsa ishlating (masalan yillar bo'yicha
+     o'sish, davlatlar bo'yicha ko'rsatkich, toifalar bo'yicha ulush). "value" MAJBURIY sonli
+     qiymat (matn emas), "unit" ixtiyoriy (%, kg, mln kabi qisqa birlik).
+   - "table": tuzilgan ma'lumotni ustun/qator ko'rinishida berish — FAQAT mavzuga 3+ ustunli
+     jadval chindan mos kelganda ishlating (masalan xususiyatlarni taqqoslash, davrlar bo'yicha
+     ma'lumot). 2-5 ustun, 3-6 qator oralig'ida bo'lsin, har katakcha qisqa va aniq.
 5. HAR BIR "detail" yoki bullet matni KAMIDA 10-18 so'zdan iborat bo'lsin — bitta so'zli yoki
    juda qisqa javoblar QATIYAN TAQIQLANADI. Slayd hech qachon "kam matnli" yoki bo'sh
    ko'rinmasligi kerak. Har doim aniq, faktik, raqamli, ma'lumotga boy yozing — umumiy
@@ -135,6 +145,25 @@ JSON formati:
       "quote_text": "...",
       "quote_author": "...",
       "context": "... (kamida 20-30 so'z, majburiy)"
+    },
+    {
+      "type": "bar_chart",
+      "heading": "...",
+      "subheading": "... (ixtiyoriy)",
+      "bars": [
+        {"label": "...", "value": 42, "unit": "%"},
+        {"label": "...", "value": 67, "unit": "%"}
+      ]
+    },
+    {
+      "type": "table",
+      "heading": "...",
+      "subheading": "... (ixtiyoriy)",
+      "columns": ["...", "...", "..."],
+      "rows": [
+        ["...", "...", "..."],
+        ["...", "...", "..."]
+      ]
     },
     {
       "type": "closing",
@@ -255,6 +284,25 @@ def find_quality_issues(slide: dict) -> list[str]:
             )
         if not slide.get("quote_text", "").strip():
             issues.append("quote_text bo'sh")
+    elif slide_type == "bar_chart":
+        bars = slide.get("bars", [])
+        if len(bars) < 2:
+            issues.append("bars kamida 2 ta bo'lishi kerak")
+        for idx, b in enumerate(bars):
+            if not isinstance(b, dict) or not isinstance(b.get("value"), (int, float)):
+                issues.append(f"bars[{idx}].value sonli qiymat emas")
+            if not (b.get("label") if isinstance(b, dict) else None):
+                issues.append(f"bars[{idx}].label bo'sh")
+    elif slide_type == "table":
+        columns = slide.get("columns", [])
+        rows = slide.get("rows", [])
+        if len(columns) < 2:
+            issues.append("columns kamida 2 ta bo'lishi kerak")
+        if not rows:
+            issues.append("rows bo'sh")
+        for idx, row in enumerate(rows):
+            if not isinstance(row, list) or len(row) != len(columns):
+                issues.append(f"rows[{idx}] ustunlar soniga mos emas")
 
     return issues
 
