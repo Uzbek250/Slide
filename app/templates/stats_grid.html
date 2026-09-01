@@ -2,13 +2,16 @@
 {% block extra_style %}
   .stats-row {
     display: grid;
-    grid-template-columns: repeat({{ stats|length if stats|length <= 4 else 4 }}, 1fr);
+    grid-template-columns: repeat({{ 4 if stats|length > 4 else (stats|length if stats|length >= 2 else 2) }}, 1fr);
     gap: 32px;
     flex: 1;
     align-content: center;
   }
   .stat-box {
     text-align: center;
+    display: flex;
+    flex-direction: column;
+    justify-content: flex-end;
   }
   .stat-num {
     font-family: 'Manrope', sans-serif;
@@ -17,8 +20,9 @@
     background: linear-gradient(135deg, var(--accent), var(--accent-2));
     -webkit-background-clip: text;
     -webkit-text-fill-color: transparent;
-    line-height: 1;
+    line-height: 1.05;
     margin-bottom: 20px;
+    word-break: break-word;
   }
   .stat-label {
     font-size: 27px;
