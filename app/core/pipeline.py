@@ -1,13 +1,21 @@
 """
-To'liq pipeline: mavzu -> Gemini JSON -> HTML render -> PNG -> PPTX.
+To'liq pipeline: mavzu -> Gemini JSON -> HTML render -> vektor PDF sahifalar
+-> birlashtirilgan PDF.
+
+Eslatma: ilova avval PPTX va PDF ikkalasini ham qo'llab-quvvatlagan, lekin
+ikkalasi ham bir xil screenshot(JPEG) rasmlaridan yig'ilgani va matn
+tahrirlanmasligi (rasm sifatida joylashgani) uchun PPTX'ning amaliy foydasi
+kam edi, shuning uchun PPTX yo'li olib tashlandi.
+
+Keyinroq screenshot(JPEG)+Pillow bosqichi ham page.pdf() (Chromium "Print to
+PDF") bilan almashtirildi — natija endi vektor PDF, matn rasm emas, zoom
+qilinganda sifat yo'qolmaydi, va oraliq JPEG encode/decode bosqichi
+yo'qolgani uchun biroz tezroq.
 """
 import tempfile
-import shutil
-import os
 
 from app.core.content_generator import generate_deck_structure
-from app.core.renderer import render_deck_to_images
-from app.core.pptx_builder import build_pptx
+from app.core.renderer import render_deck_to_pdf_pages
 from app.core.pdf_builder import build_pdf
 
 
@@ -15,23 +23,17 @@ def generate_presentation(
     topic: str,
     slide_count: int,
     output_path: str,
-    output_format: str = "pptx",
     theme: str = "minimal",
 ) -> str:
     """
-    To'liq oqimni ishga tushiradi va tayyor fayl yo'lini qaytaradi.
-    output_format: "pptx" yoki "pdf" - faqat oxirgi yig'ish bosqichi farqlanadi,
-    mavzu -> Gemini JSON -> HTML render -> rasm bosqichlari umumiy.
+    To'liq oqimni ishga tushiradi va tayyor PDF fayl yo'lini qaytaradi.
     theme: foydalanuvchi tanlagan dizayn (minimal / corporate / warm / forest).
     """
     deck = generate_deck_structure(topic, slide_count, theme=theme)
 
     with tempfile.TemporaryDirectory() as tmp_dir:
-        image_paths = render_deck_to_images(deck, tmp_dir)
+        pdf_page_paths = render_deck_to_pdf_pages(deck, tmp_dir)
         deck_title = deck.get("title", topic)
-        if output_format == "pdf":
-            build_pdf(image_paths, output_path, deck_title=deck_title)
-        else:
-            build_pptx(image_paths, output_path, deck_title=deck_title)
+        build_pdf(pdf_page_paths, output_path, deck_title=deck_title)
 
     return output_path

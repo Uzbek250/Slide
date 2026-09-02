@@ -1,26 +1,26 @@
 """
-Screenshot qilingan rasmlarni (JPEG) bitta .pdf faylga yig'adi.
-Har bir rasm - bitta sahifaga to'liq (full-bleed) joylashtiriladi.
+Har bir slayd uchun alohida render qilingan vektor PDF sahifalarini
+(page.pdf() natijasi) bitta ko'p sahifali PDF faylga birlashtiradi.
 
-Pillow'ning o'zi (qo'shimcha dependency shart emas) - JPEG rasmlarni
-ochib, ularni bitta ko'p sahifali PDF sifatida saqlaydi.
+Avval bu funksiya Pillow bilan JPEG rasmlarni PDF sahifalariga aylantirardi
+(matn rasm sifatida saqlanardi). Endi renderer.py to'g'ridan-to'g'ri vektor
+PDF sahifa yasagani uchun bu yerda faqat sahifalarni BIRLASHTIRISH kifoya -
+pypdf buni sifat yo'qotmasdan (screenshot/encode bosqichisiz) bajaradi.
 """
-from PIL import Image
+from pypdf import PdfWriter
 
 
-def build_pdf(image_paths: list[str], output_path: str, deck_title: str = "Presentation") -> str:
-    if not image_paths:
-        raise ValueError("PDF yaratish uchun kamida bitta rasm kerak")
+def build_pdf(pdf_page_paths: list[str], output_path: str, deck_title: str = "Presentation") -> str:
+    if not pdf_page_paths:
+        raise ValueError("PDF yaratish uchun kamida bitta sahifa kerak")
 
-    images = [Image.open(p).convert("RGB") for p in image_paths]
-    first, rest = images[0], images[1:]
+    writer = PdfWriter()
+    for page_path in pdf_page_paths:
+        writer.append(page_path)
 
-    first.save(
-        output_path,
-        format="PDF",
-        save_all=True,
-        append_images=rest,
-        title=deck_title,
-        resolution=150.0,
-    )
+    writer.add_metadata({"/Title": deck_title})
+
+    with open(output_path, "wb") as f:
+        writer.write(f)
+
     return output_path

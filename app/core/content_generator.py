@@ -37,9 +37,6 @@ Qat'iy qoidalar:
    - "big_stat": bitta juda muhim yakka raqam/fakt — LEKIN "context" maydoni MAJBURIY va
      kamida 20-30 so'zdan iborat bo'lishi kerak (bu raqam nima uchun muhimligini tushuntiradi).
      Prezentatsiyada 1 martadan ko'p ishlatmang.
-   - "quote": iqtibos yoki muhim tezis — LEKIN "context" maydoni MAJBURIY va kamida 20-30
-     so'zdan iborat bo'lishi kerak (iqtibosning ahamiyati/kontekstini tushuntiradi).
-     Prezentatsiyada 1 martadan ko'p ishlatmang.
    - "bar_chart": 2-6 ta qiymatni ustunli diagramma sifatida solishtirish — FAQAT haqiqatan
      bir-biriga solishtiriladigan sonli ma'lumot bo'lsa ishlating (masalan yillar bo'yicha
      o'sish, davlatlar bo'yicha ko'rsatkich, toifalar bo'yicha ulush). "value" MAJBURIY sonli
@@ -70,7 +67,12 @@ Qat'iy qoidalar:
     chiqarish o'rniga umumiy tavsiflovchi ifoda ishlating (masalan "bir necha
     o'n yillar davomida" — "1847 yilda" o'rniga, agar sanani aniq bilmasangiz).
     Noto'g'ri yoki o'ylab topilgan faktlar berish qattiq taqiqlanadi — bu
-    o'quv/taqdimot kontekstida ishonchni yo'qotadi.
+    o'quv/taqdimot kontekstida ishonchni yo'qotadi. Xususan, biror shaxsga
+    (masalan mansabdor, olim, mualliflik) so'zma-so'z gap yoki tezis
+    ATRIBUT QILIB BERMANG — kimningdir aniq shu so'zlarni aytgani/yozgani
+    ishonchli tekshirilmagan bo'lsa, bu to'qilgan iqtibos hisoblanadi va
+    QAT'IYAN TAQIQLANADI. Fikrni istalgan layout turida (masalan "bullets",
+    "big_stat") muallifsiz, umumiy tezis sifatida bering.
 12. MANTIQIY IZCHILLIK: butun taqdimotni bitta yaxlit hikoya sifatida quring —
     slaydlar orasida bir xil faktni takrorlamang, keyingi slaydda aytiladigan
     narsani oldindan aytib qo'ymang. Har bir slayd o'zidan oldingi slayd
@@ -141,12 +143,6 @@ JSON formati:
       "context": "... (kamida 20-30 so'z, majburiy)"
     },
     {
-      "type": "quote",
-      "quote_text": "...",
-      "quote_author": "...",
-      "context": "... (kamida 20-30 so'z, majburiy)"
-    },
-    {
       "type": "bar_chart",
       "heading": "...",
       "subheading": "... (ixtiyoriy)",
@@ -209,7 +205,7 @@ def _parse_json_lenient(raw_text: str) -> dict:
 _MIN_DETAIL_WORDS = 6  # promptdagi 10-18 dan biroz yumshoqroq chegara — tabiiy
                         # tarjima/uslub farqlari uchun joy qoldiradi, lekin
                         # 1-3 so'zli "kalta" javoblarni baribir ushlaydi
-_MIN_CONTEXT_WORDS = 15  # big_stat/quote uchun (talab 20-30, biroz yumshoq)
+_MIN_CONTEXT_WORDS = 15  # big_stat uchun (talab 20-30, biroz yumshoq)
 
 
 def _word_count(text: str) -> int:
@@ -241,7 +237,7 @@ def find_quality_issues(slide: dict) -> list[str]:
     slide_type = slide.get("type", "")
     heading = slide.get("heading", "")
 
-    if slide_type != "quote" and not heading.strip():
+    if not heading.strip():
         issues.append("heading bo'sh")
 
     def check_points(points: list, field_name: str):
@@ -276,14 +272,6 @@ def find_quality_issues(slide: dict) -> list[str]:
             issues.append(
                 f"big_stat.context juda qisqa ({_word_count(context)} so'z)"
             )
-    elif slide_type == "quote":
-        context = slide.get("context", "")
-        if _word_count(context) < _MIN_CONTEXT_WORDS:
-            issues.append(
-                f"quote.context juda qisqa ({_word_count(context)} so'z)"
-            )
-        if not slide.get("quote_text", "").strip():
-            issues.append("quote_text bo'sh")
     elif slide_type == "bar_chart":
         bars = slide.get("bars", [])
         if len(bars) < 2:

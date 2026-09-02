@@ -1,6 +1,6 @@
 """
 FastAPI backend: veb-forma orqali mavzu qabul qiladi, Gemini + Playwright
-yordamida taqdimot generatsiya qiladi va .pptx faylini qaytaradi.
+yordamida taqdimot generatsiya qiladi va .pdf faylini qaytaradi.
 """
 import logging
 import os
@@ -34,13 +34,10 @@ templates = Jinja2Templates(directory=TEMPLATES_DIR)
 OUTPUT_DIR = "/tmp/slide_outputs"
 os.makedirs(OUTPUT_DIR, exist_ok=True)
 
-# file_id -> (foydalanuvchiga ko'rsatiladigan fayl nomi, format)
-_FILENAME_REGISTRY: dict[str, tuple[str, str]] = {}
+# file_id -> foydalanuvchiga ko'rsatiladigan fayl nomi
+_FILENAME_REGISTRY: dict[str, str] = {}
 
-_MEDIA_TYPES = {
-    "pptx": "application/vnd.openxmlformats-officedocument.presentationml.presentation",
-    "pdf": "application/pdf",
-}
+PDF_MEDIA_TYPE = "application/pdf"
 
 
 def _slugify_filename(topic: str) -> str:
@@ -59,7 +56,6 @@ def _slugify_filename(topic: str) -> str:
 class GenerateRequest(BaseModel):
     topic: str = Field(..., min_length=2, max_length=300)
     slide_count: int = Field(..., ge=3, le=20)  # 20+ = Gemini free tier/vaqt uchun xavfli
-    output_format: str = Field("pptx", pattern="^(pptx|pdf)$")
     theme: str = Field("minimal", pattern="^(minimal|corporate|warm|forest)$")
 
 
@@ -76,31 +72,29 @@ def health():
 @app.post("/generate")
 def generate(req: GenerateRequest):
     file_id = uuid.uuid4().hex
-    ext = req.output_format
-    output_path = os.path.join(OUTPUT_DIR, f"{file_id}.{ext}")
+    output_path = os.path.join(OUTPUT_DIR, f"{file_id}.pdf")
 
     try:
         generate_presentation(
-            req.topic, req.slide_count, output_path,
-            output_format=ext, theme=req.theme,
+            req.topic, req.slide_count, output_path, theme=req.theme,
         )
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Generatsiya xatoligi: {e}")
 
-    display_name = f"{_slugify_filename(req.topic)}.{ext}"
-    _FILENAME_REGISTRY[file_id] = (display_name, ext)
+    display_name = f"{_slugify_filename(req.topic)}.pdf"
+    _FILENAME_REGISTRY[file_id] = display_name
 
     return {"file_id": file_id, "filename": display_name}
 
 
 @app.get("/download/{file_id}")
 def download(file_id: str):
-    filename, ext = _FILENAME_REGISTRY.get(file_id, ("presentation.pptx", "pptx"))
-    path = os.path.join(OUTPUT_DIR, f"{file_id}.{ext}")
+    filename = _FILENAME_REGISTRY.get(file_id, "presentation.pdf")
+    path = os.path.join(OUTPUT_DIR, f"{file_id}.pdf")
     if not os.path.exists(path):
         raise HTTPException(status_code=404, detail="Fayl topilmadi")
     return FileResponse(
         path,
-        media_type=_MEDIA_TYPES.get(ext, "application/octet-stream"),
+        media_type=PDF_MEDIA_TYPE,
         filename=filename,
     )

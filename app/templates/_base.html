@@ -47,7 +47,19 @@
     {% endif %}
   }
 
-  * { margin: 0; padding: 0; box-sizing: border-box; }
+  * {
+    margin: 0; padding: 0; box-sizing: border-box;
+    /* page.pdf() "Print to PDF" rejimida barcha elementlar uchun fon
+       rang/gradientlarni majburan chop etadi (aks holda Chromium
+       siyoh-tejash rejimida ularni oq bilan almashtiradi). */
+    print-color-adjust: exact;
+    -webkit-print-color-adjust: exact;
+  }
+
+  @page {
+    size: 1920px 1080px;
+    margin: 0;
+  }
 
   html, body {
     width: 1920px;
@@ -57,6 +69,12 @@
     background: var(--bg-gradient);
     color: var(--text-primary);
     -webkit-font-smoothing: antialiased;
+    /* page.pdf() "Print to PDF" rejimini ishlatadi - shu rejimda Chromium
+       standart holatda fon rang/gradientlarni siyoh tejash uchun chop
+       etmaydi. Buni majburan yoqamiz, aks holda barcha fonlar oq bo'lib
+       chiqadi (accent-bar gradienti ham yo'qoladi). */
+    print-color-adjust: exact;
+    -webkit-print-color-adjust: exact;
   }
 
   .slide {
@@ -73,6 +91,8 @@
     top: 0; left: 0;
     width: 12px; height: 100%;
     background: linear-gradient(180deg, var(--accent), var(--accent-2));
+    print-color-adjust: exact;
+    -webkit-print-color-adjust: exact;
   }
 
   .heading {
